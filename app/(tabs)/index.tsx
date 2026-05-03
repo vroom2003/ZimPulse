@@ -1,98 +1,338 @@
-import { Image } from 'expo-image';
-import { Platform, StyleSheet } from 'react-native';
-
-import { HelloWave } from '@/components/hello-wave';
-import ParallaxScrollView from '@/components/parallax-scroll-view';
-import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
-import { Link } from 'expo-router';
+import { MaterialIcons } from '@expo/vector-icons';
+import React, { useEffect, useState } from 'react';
+import {
+    Platform,
+    ScrollView,
+    StyleSheet,
+    Text,
+    TouchableOpacity,
+    View,
+} from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { useRouter } from 'expo-router';
+import { supabase } from '@/src/services/supabaseClient';
+import { colors } from '@/src/theme/colors';
+import { shadows } from '@/src/theme/shadows';
+import { spacing } from '@/src/theme/spacing';
+import { typography } from '@/src/theme/typography';
 
 export default function HomeScreen() {
-  return (
-    <ParallaxScrollView
-      headerBackgroundColor={{ light: '#A1CEDC', dark: '#1D3D47' }}
-      headerImage={
-        <Image
-          source={require('@/assets/images/partial-react-logo.png')}
-          style={styles.reactLogo}
-        />
-      }>
-      <ThemedView style={styles.titleContainer}>
-        <ThemedText type="title">Welcome!</ThemedText>
-        <HelloWave />
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 1: Try it</ThemedText>
-        <ThemedText>
-          Edit <ThemedText type="defaultSemiBold">app/(tabs)/index.tsx</ThemedText> to see changes.
-          Press{' '}
-          <ThemedText type="defaultSemiBold">
-            {Platform.select({
-              ios: 'cmd + d',
-              android: 'cmd + m',
-              web: 'F12',
-            })}
-          </ThemedText>{' '}
-          to open developer tools.
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <Link href="/modal">
-          <Link.Trigger>
-            <ThemedText type="subtitle">Step 2: Explore</ThemedText>
-          </Link.Trigger>
-          <Link.Preview />
-          <Link.Menu>
-            <Link.MenuAction title="Action" icon="cube" onPress={() => alert('Action pressed')} />
-            <Link.MenuAction
-              title="Share"
-              icon="square.and.arrow.up"
-              onPress={() => alert('Share pressed')}
-            />
-            <Link.Menu title="More" icon="ellipsis">
-              <Link.MenuAction
-                title="Delete"
-                icon="trash"
-                destructive
-                onPress={() => alert('Delete pressed')}
-              />
-            </Link.Menu>
-          </Link.Menu>
-        </Link>
+  const router = useRouter();
+  // State for dynamic data
+  const [facilitiesCount, setFacilitiesCount] = useState(3); // Default
+  const [systemReady, setSystemReady] = useState(true);
 
-        <ThemedText>
-          {`Tap the Explore tab to learn more about what's included in this starter app.`}
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 3: Get a fresh start</ThemedText>
-        <ThemedText>
-          {`When you're ready, run `}
-          <ThemedText type="defaultSemiBold">npm run reset-project</ThemedText> to get a fresh{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> directory. This will move the current{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> to{' '}
-          <ThemedText type="defaultSemiBold">app-example</ThemedText>.
-        </ThemedText>
-      </ThemedView>
-    </ParallaxScrollView>
+  // Fetch live data from Supabase
+  useEffect(() => {
+    fetchData();
+  }, []);
+
+  async function fetchData() {
+    try {
+      // Count facilities
+      const { count: facCount } = await supabase
+        .from('facilities')
+        .select('*', { count: 'exact', head: true });
+      if (facCount) setFacilitiesCount(facCount);
+    } catch (error) {
+      console.error('Error fetching data:', error);
+      setSystemReady(false);
+    }
+  }
+
+  return (
+    <SafeAreaView style={styles.container} edges={['top']}>
+      {/* ========== HEADER ========== */}
+      <View style={styles.header}>
+        <View style={styles.headerLeft}>
+          <MaterialIcons name="location-on" size={20} color={colors.sosRed} />
+          <Text style={styles.headerTitle}>Harare Central</Text>
+        </View>
+        <View style={styles.avatarContainer}>
+          <MaterialIcons name="person" size={24} color={colors.greyInactive} />
+        </View>
+      </View>
+
+      {/* ========== SCROLLABLE CONTENT ========== */}
+      <ScrollView
+        style={styles.scrollView}
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+      >
+        {/* ========== SOS BUTTON ========== */}
+        <TouchableOpacity
+          style={styles.sosButton}
+          activeOpacity={0.8}
+          onPress={() => router.push('/sos')}
+        >
+          <MaterialIcons
+            name="emergency"
+            size={48}
+            color={colors.white}
+          />
+          <Text style={styles.sosButtonText}>EMERGENCY SOS</Text>
+        </TouchableOpacity>
+
+        {/* ========== FIND NEARBY HELP BUTTON ========== */}
+        <TouchableOpacity
+          style={styles.findHelpButton}
+          activeOpacity={0.8}
+          onPress={() => router.push('/map')}
+        >
+          <MaterialIcons name="search" size={20} color={colors.onSecondaryContainer} />
+          <Text style={styles.findHelpText}>Find Nearby Help</Text>
+        </TouchableOpacity>
+
+        {/* ========== SYSTEM STATUS ========== */}
+        <Text style={styles.sectionTitle}>System Status</Text>
+        <View style={styles.statusGrid}>
+          {/* System Ready Card */}
+          <View style={styles.statusCardLarge}>
+            <View>
+              <Text style={styles.statusLabel}>System Status</Text>
+              <Text style={styles.statusValue}>
+                {systemReady ? 'System Ready' : 'Reconnecting...'}
+              </Text>
+            </View>
+            <View style={styles.checkCircle}>
+              <MaterialIcons
+                name="check-circle"
+                size={32}
+                color={colors.onTertiaryContainer}
+              />
+            </View>
+          </View>
+
+          <View style={{ flexDirection: 'row', gap: spacing.gutter }}>
+              {/* Facilities Count */}
+              <View style={[styles.statusCard, { flex: 1 }]}>
+                <MaterialIcons
+                  name="local-hospital"
+                  size={32}
+                  color={colors.secondary}
+                />
+                <Text style={styles.statNumber}>{facilitiesCount} Nearby</Text>
+                <Text style={styles.statLabel}>Facilities active</Text>
+              </View>
+
+              {/* Response Time */}
+              <View style={[styles.statusCard, { flex: 1 }]}>
+                <MaterialIcons name="timer" size={32} color={colors.primary} />
+                <Text style={styles.statNumber}>4m Avg</Text>
+                <Text style={styles.statLabel}>Response time</Text>
+              </View>
+          </View>
+        </View>
+
+        {/* ========== RAPID ACTIONS ========== */}
+        <Text style={styles.sectionTitle}>Rapid Actions</Text>
+        <View style={styles.actionsList}>
+          {/* Request Ambulance */}
+          <TouchableOpacity style={styles.actionItem} activeOpacity={0.7}>
+            <View style={[styles.actionIcon, { backgroundColor: colors.errorContainer }]}>
+              <MaterialIcons name="ambulance" size={24} color={colors.onErrorContainer} />
+            </View>
+            <View style={styles.actionTextContainer}>
+              <Text style={styles.actionTitle}>Request Ambulance</Text>
+              <Text style={styles.actionSubtitle}>Fast-track dispatch service</Text>
+            </View>
+            <MaterialIcons name="chevron-right" size={24} color={colors.onSurfaceVariant} />
+          </TouchableOpacity>
+
+          {/* Emergency Care Tips */}
+          <TouchableOpacity style={styles.actionItem} activeOpacity={0.7}>
+            <View style={[styles.actionIcon, { backgroundColor: colors.secondaryFixed }]}>
+              <MaterialIcons name="medical-services" size={24} color={colors.onSecondaryFixed} />
+            </View>
+            <View style={styles.actionTextContainer}>
+              <Text style={styles.actionTitle}>Emergency Care Tips</Text>
+              <Text style={styles.actionSubtitle}>First-aid guidance during crisis</Text>
+            </View>
+            <MaterialIcons name="chevron-right" size={24} color={colors.onSurfaceVariant} />
+          </TouchableOpacity>
+        </View>
+      </ScrollView>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  titleContainer: {
+  container: {
+    flex: 1,
+    backgroundColor: colors.background,
+  },
+
+  // Header
+  header: {
+    backgroundColor: colors.darkHeader,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: spacing.marginMobile,
+    height: 64,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.darkBorder,
+    ...shadows.header,
+  },
+  headerLeft: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
+    gap: spacing.sm,
   },
-  stepContainer: {
-    gap: 8,
-    marginBottom: 8,
+  headerTitle: {
+    ...typography.h3,
+    color: colors.white,
+    fontWeight: '800',
+    textTransform: 'uppercase',
   },
-  reactLogo: {
-    height: 178,
-    width: 290,
-    bottom: 0,
-    left: 0,
-    position: 'absolute',
+  avatarContainer: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    borderWidth: 2,
+    borderColor: colors.sosRed,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: colors.surfaceContainerHigh,
+  },
+
+  // ScrollView
+  scrollView: {
+    flex: 1,
+  },
+  scrollContent: {
+    padding: spacing.marginMobile,
+    paddingBottom: spacing.lg,
+  },
+
+  // SOS Button
+  sosButton: {
+    backgroundColor: colors.primary,
+    width: 224,
+    height: 224,
+    borderRadius: 112,
+    justifyContent: 'center',
+    alignItems: 'center',
+    alignSelf: 'center',
+    marginBottom: spacing.lg,
+    ...shadows.sosGlow,
+  },
+  sosButtonText: {
+    color: colors.white,
+    fontFamily: 'Montserrat_700Bold',
+    fontSize: 24,
+    fontWeight: '900',
+    letterSpacing: -0.5,
+    marginTop: spacing.xs,
+  },
+
+  // Find Help Button
+  findHelpButton: {
+    backgroundColor: colors.secondaryContainer,
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    gap: spacing.sm,
+    height: 48,
+    borderRadius: 12,
+    marginBottom: spacing.lg,
+    alignSelf: 'center',
+    paddingHorizontal: spacing.md,
+  },
+  findHelpText: {
+    ...typography.callout,
+    color: colors.onSecondaryContainer,
+  },
+
+  // Section Title
+  sectionTitle: {
+    ...typography.h2,
+    color: colors.onSurface,
+    marginBottom: spacing.md,
+  },
+
+  // Status Grid
+  statusGrid: {
+    gap: spacing.gutter,
+    marginBottom: spacing.lg,
+  },
+  statusCardLarge: {
+    backgroundColor: colors.surfaceContainerLowest,
+    borderWidth: 1,
+    borderColor: colors.outlineVariant,
+    borderRadius: 12,
+    padding: spacing.md,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    ...shadows.card,
+  },
+  statusLabel: {
+    ...typography.labelBold,
+    color: colors.onSurfaceVariant,
+    textTransform: 'uppercase',
+    marginBottom: spacing.xs,
+  },
+  statusValue: {
+    ...typography.h2,
+    color: colors.onSurface,
+  },
+  checkCircle: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: colors.tertiaryContainer,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  statusCard: {
+    backgroundColor: colors.surfaceContainerLowest,
+    borderWidth: 1,
+    borderColor: colors.outlineVariant,
+    borderRadius: 12,
+    padding: spacing.md,
+    ...shadows.card,
+  },
+  statNumber: {
+    ...typography.h3,
+    color: colors.onSurface,
+    marginTop: spacing.sm,
+  },
+  statLabel: {
+    ...typography.bodySm,
+    color: colors.onSurfaceVariant,
+  },
+
+  // Action Items
+  actionsList: {
+    gap: spacing.sm,
+  },
+  actionItem: {
+    backgroundColor: colors.surfaceContainerLowest,
+    borderWidth: 1,
+    borderColor: colors.outlineVariant,
+    borderRadius: 12,
+    padding: spacing.sm,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.md,
+  },
+  actionIcon: {
+    width: 48,
+    height: 48,
+    borderRadius: 12,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  actionTextContainer: {
+    flex: 1,
+  },
+  actionTitle: {
+    ...typography.callout,
+    color: colors.onSurface,
+  },
+  actionSubtitle: {
+    ...typography.bodySm,
+    color: colors.onSurfaceVariant,
   },
 });
