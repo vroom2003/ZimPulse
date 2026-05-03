@@ -1,98 +1,372 @@
-import { Image } from 'expo-image';
-import { Platform, StyleSheet } from 'react-native';
-
-import { HelloWave } from '@/components/hello-wave';
-import ParallaxScrollView from '@/components/parallax-scroll-view';
-import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
-import { Link } from 'expo-router';
+import { MaterialIcons } from '@expo/vector-icons';
+import React, { useEffect, useState } from 'react';
+import {
+    Platform,
+    ScrollView,
+    StyleSheet,
+    Text,
+    TouchableOpacity,
+    View,
+} from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { useRouter } from 'expo-router';
+import { supabase } from '@/src/services/supabaseClient';
+import { colors } from '@/src/theme/colors';
+import { shadows } from '@/src/theme/shadows';
+import { spacing } from '@/src/theme/spacing';
+import { typography } from '@/src/theme/typography';
 
 export default function HomeScreen() {
-  return (
-    <ParallaxScrollView
-      headerBackgroundColor={{ light: '#A1CEDC', dark: '#1D3D47' }}
-      headerImage={
-        <Image
-          source={require('@/assets/images/partial-react-logo.png')}
-          style={styles.reactLogo}
-        />
-      }>
-      <ThemedView style={styles.titleContainer}>
-        <ThemedText type="title">Welcome!</ThemedText>
-        <HelloWave />
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 1: Try it</ThemedText>
-        <ThemedText>
-          Edit <ThemedText type="defaultSemiBold">app/(tabs)/index.tsx</ThemedText> to see changes.
-          Press{' '}
-          <ThemedText type="defaultSemiBold">
-            {Platform.select({
-              ios: 'cmd + d',
-              android: 'cmd + m',
-              web: 'F12',
-            })}
-          </ThemedText>{' '}
-          to open developer tools.
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <Link href="/modal">
-          <Link.Trigger>
-            <ThemedText type="subtitle">Step 2: Explore</ThemedText>
-          </Link.Trigger>
-          <Link.Preview />
-          <Link.Menu>
-            <Link.MenuAction title="Action" icon="cube" onPress={() => alert('Action pressed')} />
-            <Link.MenuAction
-              title="Share"
-              icon="square.and.arrow.up"
-              onPress={() => alert('Share pressed')}
-            />
-            <Link.Menu title="More" icon="ellipsis">
-              <Link.MenuAction
-                title="Delete"
-                icon="trash"
-                destructive
-                onPress={() => alert('Delete pressed')}
-              />
-            </Link.Menu>
-          </Link.Menu>
-        </Link>
+  const router = useRouter();
+  const [facilitiesCount, setFacilitiesCount] = useState(3);
+  const [systemReady, setSystemReady] = useState(true);
 
-        <ThemedText>
-          {`Tap the Explore tab to learn more about what's included in this starter app.`}
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 3: Get a fresh start</ThemedText>
-        <ThemedText>
-          {`When you're ready, run `}
-          <ThemedText type="defaultSemiBold">npm run reset-project</ThemedText> to get a fresh{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> directory. This will move the current{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> to{' '}
-          <ThemedText type="defaultSemiBold">app-example</ThemedText>.
-        </ThemedText>
-      </ThemedView>
-    </ParallaxScrollView>
+  useEffect(() => {
+    fetchData();
+  }, []);
+
+  async function fetchData() {
+    try {
+      const { count: facCount } = await supabase
+        .from('facilities')
+        .select('*', { count: 'exact', head: true });
+      if (facCount) setFacilitiesCount(facCount);
+    } catch (error) {
+      console.error('Error fetching data:', error);
+      setSystemReady(false);
+    }
+  }
+
+  return (
+    <SafeAreaView style={styles.container} edges={['top']}>
+      {/* ========== HEADER ========== */}
+      <View style={styles.header}>
+        <View style={styles.headerLeft}>
+          <MaterialIcons name="location-on" size={24} color={colors.sosRed} />
+          <Text style={styles.headerTitle}>HARARE CENTRAL</Text>
+        </View>
+        <View style={styles.avatarContainer}>
+           <MaterialIcons name="person" size={24} color={colors.greyInactive} />
+        </View>
+      </View>
+
+      <ScrollView
+        style={styles.scrollView}
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+      >
+        {/* ========== SOS SECTION ========== */}
+        <View style={styles.sosSection}>
+             <TouchableOpacity
+              style={styles.sosButton}
+              activeOpacity={0.8}
+              onPress={() => router.push('/sos')}
+            >
+              <MaterialIcons
+                name="emergency"
+                size={80}
+                color={colors.white}
+              />
+              <Text style={styles.sosButtonText}>SOS</Text>
+            </TouchableOpacity>
+
+            <View style={styles.tagLineContainer}>
+                <Text style={styles.brandTitle}>ZimPulse</Text>
+                <Text style={styles.brandTagline}>EVERY HEARTBEAT COUNTS.</Text>
+            </View>
+        </View>
+
+        {/* ========== MAIN ACTIONS ========== */}
+        <View style={styles.actionGrid}>
+            <TouchableOpacity
+                style={styles.mainActionCard}
+                onPress={() => router.push('/map')}
+            >
+                <View style={[styles.actionIconContainer, { backgroundColor: '#E3F2FD' }]}>
+                    <MaterialIcons name="map" size={32} color={colors.secondary} />
+                </View>
+                <Text style={styles.actionCardTitle}>Find Help</Text>
+                <Text style={styles.actionCardSubtitle}>Nearby facilities</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+                style={styles.mainActionCard}
+                onPress={() => router.push('/list')}
+            >
+                <View style={[styles.actionIconContainer, { backgroundColor: '#F1F8E9' }]}>
+                    <MaterialIcons name="format-list-bulleted" size={32} color={colors.successGreen} />
+                </View>
+                <Text style={styles.actionCardTitle}>Facility List</Text>
+                <Text style={styles.actionCardSubtitle}>All healthcare</Text>
+            </TouchableOpacity>
+        </View>
+
+        {/* ========== SYSTEM STATUS ========== */}
+        <Text style={styles.sectionTitle}>System Status</Text>
+        <View style={styles.statusGrid}>
+          <View style={styles.statusCardLarge}>
+            <View>
+              <Text style={styles.statusLabel}>Network Status</Text>
+              <Text style={styles.statusValue}>
+                {systemReady ? 'System Ready' : 'Reconnecting...'}
+              </Text>
+            </View>
+            <View style={styles.checkCircle}>
+              <MaterialIcons
+                name="check-circle"
+                size={32}
+                color={colors.successGreen}
+              />
+            </View>
+          </View>
+
+          <View style={{ flexDirection: 'row', gap: spacing.gutter }}>
+              <View style={[styles.statusCard, { flex: 1 }]}>
+                <MaterialIcons
+                  name="local-hospital"
+                  size={32}
+                  color={colors.secondary}
+                />
+                <Text style={styles.statNumber}>{facilitiesCount} Active</Text>
+                <Text style={styles.statLabel}>Facilities online</Text>
+              </View>
+
+              <View style={[styles.statusCard, { flex: 1 }]}>
+                <MaterialIcons name="timer" size={32} color={colors.primary} />
+                <Text style={styles.statNumber}>4m Avg</Text>
+                <Text style={styles.statLabel}>Response time</Text>
+              </View>
+          </View>
+        </View>
+
+        {/* ========== RAPID ACTIONS ========== */}
+        <Text style={styles.sectionTitle}>Rapid Actions</Text>
+        <View style={styles.actionsList}>
+          <TouchableOpacity style={styles.actionItem} activeOpacity={0.7}>
+            <View style={[styles.actionIcon, { backgroundColor: colors.errorContainer }]}>
+              <MaterialIcons name="local-hospital" size={24} color={colors.onErrorContainer} />
+            </View>
+            <View style={styles.actionTextContainer}>
+              <Text style={styles.actionTitle}>Request Ambulance</Text>
+              <Text style={styles.actionSubtitle}>Fast-track dispatch service</Text>
+            </View>
+            <MaterialIcons name="chevron-right" size={24} color={colors.onSurfaceVariant} />
+          </TouchableOpacity>
+
+          <TouchableOpacity style={styles.actionItem} activeOpacity={0.7}>
+            <View style={[styles.actionIcon, { backgroundColor: '#FFF9C4' }]}>
+              <MaterialIcons name="medical-services" size={24} color={colors.tertiary} />
+            </View>
+            <View style={styles.actionTextContainer}>
+              <Text style={styles.actionTitle}>Emergency Care Tips</Text>
+              <Text style={styles.actionSubtitle}>First-aid guidance during crisis</Text>
+            </View>
+            <MaterialIcons name="chevron-right" size={24} color={colors.onSurfaceVariant} />
+          </TouchableOpacity>
+        </View>
+      </ScrollView>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  titleContainer: {
+  container: {
+    flex: 1,
+    backgroundColor: colors.background,
+  },
+  header: {
+    backgroundColor: colors.darkHeader,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: spacing.marginMobile,
+    height: 64,
+    ...shadows.header,
+  },
+  headerLeft: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
   },
-  stepContainer: {
-    gap: 8,
-    marginBottom: 8,
+  headerTitle: {
+    ...typography.h3,
+    color: colors.white,
+    fontWeight: '800',
   },
-  reactLogo: {
-    height: 178,
-    width: 290,
-    bottom: 0,
-    left: 0,
-    position: 'absolute',
+  avatarContainer: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    borderWidth: 2,
+    borderColor: colors.primary,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: colors.white,
+  },
+  scrollView: {
+    flex: 1,
+  },
+  scrollContent: {
+    padding: spacing.marginMobile,
+    paddingBottom: spacing.lg,
+  },
+  sosSection: {
+    alignItems: 'center',
+    paddingVertical: 20,
+    position: 'relative',
+    marginBottom: 20,
+  },
+  sosButton: {
+    backgroundColor: colors.primary,
+    width: 180,
+    height: 180,
+    borderRadius: 90,
+    justifyContent: 'center',
+    alignItems: 'center',
+    ...shadows.sosGlow,
+    zIndex: 2,
+  },
+  sosButtonText: {
+    color: colors.white,
+    fontFamily: 'Montserrat_700Bold',
+    fontSize: 32,
+    fontWeight: '900',
+  },
+  tagLineContainer: {
+      marginTop: -40,
+      paddingTop: 50,
+      alignItems: 'center',
+      width: '100%',
+  },
+  brandTitle: {
+      fontSize: 48,
+      fontWeight: '900',
+      color: 'rgba(175, 16, 26, 0.1)',
+      position: 'absolute',
+      top: 10,
+  },
+  brandTagline: {
+      fontSize: 12,
+      fontWeight: '800',
+      color: colors.primary,
+      letterSpacing: 2,
+  },
+  actionGrid: {
+      flexDirection: 'row',
+      gap: 16,
+      marginBottom: 32,
+  },
+  mainActionCard: {
+      flex: 1,
+      backgroundColor: colors.white,
+      borderRadius: 16,
+      padding: 16,
+      ...shadows.card,
+      borderWidth: 1,
+      borderColor: colors.outlineVariant,
+  },
+  actionIconContainer: {
+      width: 56,
+      height: 56,
+      borderRadius: 12,
+      justifyContent: 'center',
+      alignItems: 'center',
+      marginBottom: 12,
+  },
+  actionCardTitle: {
+      fontSize: 18,
+      fontWeight: '700',
+      color: colors.onSurface,
+  },
+  actionCardSubtitle: {
+      fontSize: 12,
+      color: colors.greyInactive,
+  },
+  sectionTitle: {
+    ...typography.h2,
+    color: colors.onSurface,
+    marginBottom: spacing.md,
+  },
+  statusGrid: {
+    gap: spacing.gutter,
+    marginBottom: spacing.lg,
+  },
+  statusCardLarge: {
+    backgroundColor: colors.white,
+    borderWidth: 1,
+    borderColor: colors.outlineVariant,
+    borderRadius: 12,
+    padding: spacing.md,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    ...shadows.card,
+  },
+  statusLabel: {
+    ...typography.labelBold,
+    color: colors.greyInactive,
+    textTransform: 'uppercase',
+  },
+  statusValue: {
+    ...typography.h2,
+    color: colors.onSurface,
+    marginTop: 4,
+  },
+  checkCircle: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: '#E8F5E9',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  statusCard: {
+    backgroundColor: colors.white,
+    borderWidth: 1,
+    borderColor: colors.outlineVariant,
+    borderRadius: 12,
+    padding: spacing.md,
+    ...shadows.card,
+  },
+  statNumber: {
+    ...typography.h3,
+    color: colors.onSurface,
+    marginTop: spacing.sm,
+  },
+  statLabel: {
+    ...typography.bodySm,
+    color: colors.greyInactive,
+  },
+  actionsList: {
+    gap: spacing.sm,
+  },
+  actionItem: {
+    backgroundColor: colors.white,
+    borderWidth: 1,
+    borderColor: colors.outlineVariant,
+    borderRadius: 12,
+    padding: spacing.sm,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.md,
+    ...shadows.card,
+  },
+  actionIcon: {
+    width: 48,
+    height: 48,
+    borderRadius: 12,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  actionTextContainer: {
+    flex: 1,
+  },
+  actionTitle: {
+    ...typography.callout,
+    color: colors.onSurface,
+  },
+  actionSubtitle: {
+    ...typography.bodySm,
+    color: colors.greyInactive,
   },
 });
