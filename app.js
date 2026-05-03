@@ -31,6 +31,7 @@ export default function App() {
     async function prepare() {
       try {
         // Load all font files
+        /*
         await Font.loadAsync({
           // We use system fonts that are always available on both platforms
           // In a production app, you'd load custom .ttf files
@@ -39,6 +40,7 @@ export default function App() {
           'Inter_600SemiBold': require('./assets/fonts/Inter-SemiBold.ttf'),
           'Inter_700Bold': require('./assets/fonts/Inter-Bold.ttf'),
         });
+        */
       } catch (error) {
         console.warn('Font loading error:', error);
         // If fonts fail to load, the app still works with system defaults
