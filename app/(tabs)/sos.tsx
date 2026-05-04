@@ -52,7 +52,7 @@ export default function SOSScreen() {
       const isAvailable = await SMS.isAvailableAsync();
       if (isAvailable) {
         const { result } = await SMS.sendSMSAsync(
-          ['911', '0770000000'], // Emergency contacts
+          ['999', '994'], // Zimbabwe Emergency contacts
           `EMERGENCY SOS from ZimPulse! I need immediate assistance. My location: ${locationMsg}`
         );
         if (result === 'sent') {
@@ -72,10 +72,12 @@ export default function SOSScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.container} edges={['top']}>
-      <View style={styles.header}>
-        <Text style={styles.headerTitle}>Emergency SOS</Text>
-      </View>
+    <View style={styles.container}>
+      <SafeAreaView edges={['top']} style={{ backgroundColor: colors.darkHeader }}>
+        <View style={styles.header}>
+          <Text style={styles.headerTitle}>EMERGENCY SOS</Text>
+        </View>
+      </SafeAreaView>
 
       <View style={styles.content}>
         {!active ? (
@@ -119,7 +121,7 @@ export default function SOSScreen() {
             Triggering SOS will send your live location to emergency services and your primary contacts.
           </Text>
       </View>
-    </SafeAreaView>
+    </View>
   );
 }
 
@@ -129,13 +131,15 @@ const styles = StyleSheet.create({
     backgroundColor: colors.background,
   },
   header: {
-    height: 64,
+    height: 60,
     backgroundColor: colors.darkHeader,
     justifyContent: 'center',
     alignItems: 'center',
   },
   headerTitle: {
-    ...typography.h3,
+    fontFamily: 'Montserrat_700Bold',
+    fontSize: 14,
+    letterSpacing: 2,
     color: colors.white,
   },
   content: {

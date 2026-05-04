@@ -50,19 +50,20 @@ export default function TabLayout() {
 
 const styles = StyleSheet.create({
   tabBar: {
-    backgroundColor: 'rgba(20, 20, 20, 0.9)',
-    borderTopColor: colors.darkBorder,
-    borderTopWidth: 1,
-    height: Platform.OS === 'ios' ? 88 : 72,
+    backgroundColor: 'rgba(10, 10, 10, 0.98)',
+    borderTopColor: 'rgba(175, 16, 26, 0.3)',
+    borderTopWidth: 1.5,
+    height: Platform.OS === 'ios' ? 92 : 72,
     paddingTop: 8,
-    paddingBottom: Platform.OS === 'ios' ? 28 : 8,
+    paddingBottom: Platform.OS === 'ios' ? 32 : 8,
     ...shadows.bottomNav,
   },
   tabLabel: {
     fontFamily: 'Montserrat_700Bold',
     fontSize: 10,
-    fontWeight: '600',
-    letterSpacing: 2,
+    fontWeight: '700',
+    letterSpacing: 1.5,
     textTransform: 'uppercase',
+    marginTop: -4,
   },
 });
