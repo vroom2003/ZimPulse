@@ -1,5 +1,6 @@
 import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
-import { useFonts, Manrope_700Bold, Manrope_600SemiBold } from '@expo-google-fonts/manrope';
+import { useFonts } from 'expo-font';
+import { Manrope_700Bold, Manrope_600SemiBold } from '@expo-google-fonts/manrope';
 import { Inter_400Regular, Inter_600SemiBold, Inter_700Bold } from '@expo-google-fonts/inter';
 import { Montserrat_700Bold } from '@expo-google-fonts/montserrat';
 import { Stack } from 'expo-router';
@@ -16,7 +17,7 @@ export const unstable_settings = {
 };
 
 export default function RootLayout() {
-  const [loaded] = useFonts({
+  const [loaded, error] = useFonts({
     Manrope_700Bold,
     Manrope_600SemiBold,
     Inter_400Regular,
@@ -24,6 +25,10 @@ export default function RootLayout() {
     Inter_700Bold,
     Montserrat_700Bold,
   });
+
+  useEffect(() => {
+    if (error) throw error;
+  }, [error]);
 
   useEffect(() => {
     if (loaded) {
