@@ -1,6 +1,7 @@
-import { MaterialIcons } from '@expo/vector-icons';
+import { MaterialIcons, FontAwesome5 } from '@expo/vector-icons';
 import React, { useEffect, useState } from 'react';
 import {
+    Image,
     Platform,
     ScrollView,
     StyleSheet,
@@ -38,23 +39,36 @@ export default function HomeScreen() {
   }
 
   return (
-    <SafeAreaView style={styles.container} edges={['top']}>
-      {/* ========== HEADER ========== */}
-      <View style={styles.header}>
-        <View style={styles.headerLeft}>
-          <MaterialIcons name="location-on" size={24} color={colors.sosRed} />
-          <Text style={styles.headerTitle}>HARARE CENTRAL</Text>
+    <View style={styles.container}>
+      <SafeAreaView edges={['top']} style={{ backgroundColor: colors.darkHeader }}>
+        <View style={styles.header}>
+          <Image
+            source={require('@/assets/images/logo.png')}
+            style={styles.logo}
+            resizeMode="contain"
+          />
+          <View style={styles.headerRight}>
+            <View style={styles.locationBadge}>
+              <MaterialIcons name="location-on" size={14} color={colors.sosRed} />
+              <Text style={styles.locationText}>HARARE</Text>
+            </View>
+            <View style={styles.avatarContainer}>
+               <MaterialIcons name="person" size={20} color={colors.greyInactive} />
+            </View>
+          </View>
         </View>
-        <View style={styles.avatarContainer}>
-           <MaterialIcons name="person" size={24} color={colors.greyInactive} />
-        </View>
-      </View>
+      </SafeAreaView>
 
       <ScrollView
         style={styles.scrollView}
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
+        <View style={styles.heroSection}>
+          <Text style={styles.heroGreeting}>Hello, User</Text>
+          <Text style={styles.heroSubtext}>Emergency services are on standby</Text>
+        </View>
+
         {/* ========== SOS SECTION ========== */}
         <View style={styles.sosSection}>
              <TouchableOpacity
@@ -144,7 +158,7 @@ export default function HomeScreen() {
         <View style={styles.actionsList}>
           <TouchableOpacity style={styles.actionItem} activeOpacity={0.7}>
             <View style={[styles.actionIcon, { backgroundColor: colors.errorContainer }]}>
-              <MaterialIcons name="local-hospital" size={24} color={colors.onErrorContainer} />
+              <FontAwesome5 name="ambulance" size={20} color={colors.onErrorContainer} />
             </View>
             <View style={styles.actionTextContainer}>
               <Text style={styles.actionTitle}>Request Ambulance</Text>
@@ -165,7 +179,7 @@ export default function HomeScreen() {
           </TouchableOpacity>
         </View>
       </ScrollView>
-    </SafeAreaView>
+    </View>
   );
 }
 
@@ -180,24 +194,38 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     paddingHorizontal: spacing.marginMobile,
-    height: 64,
+    height: 70,
     ...shadows.header,
   },
-  headerLeft: {
+  logo: {
+    height: 40,
+    width: 120,
+  },
+  headerRight: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
+    gap: 12,
   },
-  headerTitle: {
-    ...typography.h3,
+  locationBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(255,255,255,0.1)',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 20,
+    gap: 4,
+  },
+  locationText: {
     color: colors.white,
-    fontWeight: '800',
+    fontSize: 12,
+    fontWeight: '700',
+    fontFamily: 'Inter_700Bold',
   },
   avatarContainer: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    borderWidth: 2,
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    borderWidth: 1.5,
     borderColor: colors.primary,
     justifyContent: 'center',
     alignItems: 'center',
@@ -210,11 +238,25 @@ const styles = StyleSheet.create({
     padding: spacing.marginMobile,
     paddingBottom: spacing.lg,
   },
+  heroSection: {
+    marginBottom: spacing.lg,
+  },
+  heroGreeting: {
+    ...typography.h1,
+    color: colors.onSurface,
+    fontSize: 32,
+    fontWeight: '800',
+  },
+  heroSubtext: {
+    ...typography.bodyMd,
+    color: colors.greyInactive,
+    marginTop: 4,
+  },
   sosSection: {
     alignItems: 'center',
     paddingVertical: 20,
     position: 'relative',
-    marginBottom: 20,
+    marginBottom: 40,
   },
   sosButton: {
     backgroundColor: colors.primary,

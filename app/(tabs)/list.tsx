@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { StyleSheet, Text, View, FlatList, TouchableOpacity, TextInput, ScrollView, Linking } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialIcons } from '@expo/vector-icons';
+import * as Location from 'expo-location';
 import { colors } from '@/src/theme/colors';
 import { typography } from '@/src/theme/typography';
 import { spacing } from '@/src/theme/spacing';
@@ -10,23 +11,73 @@ import { supabase } from '@/src/services/supabaseClient';
 
 const FILTER_OPTIONS = ['All Facilities', 'Hospitals', 'Clinics', 'Open Now'];
 
+interface Facility {
+  id: number;
+  name: string;
+  type: 'Hospital' | 'Clinic';
+  status: 'Open' | 'Closed';
+  address: string;
+  description?: string;
+  phone?: string;
+  latitude: number;
+  longitude: number;
+  distance?: number;
+}
+
 export default function ListScreen() {
-  const [facilities, setFacilities] = useState([]);
+  const [facilities, setFacilities] = useState<Facility[]>([]);
   const [search, setSearch] = useState('');
   const [selectedFilter, setSelectedFilter] = useState('All Facilities');
   const [loading, setLoading] = useState(true);
+  const [userLocation, setUserLocation] = useState<Location.LocationObject | null>(null);
 
   useEffect(() => {
-    fetchFacilities();
+    (async () => {
+      const { status } = await Location.requestForegroundPermissionsAsync();
+      if (status === 'granted') {
+        const location = await Location.getCurrentPositionAsync({});
+        setUserLocation(location);
+      }
+      fetchFacilities();
+    })();
   }, []);
 
   async function fetchFacilities() {
     const { data, error } = await supabase.from('facilities').select('*');
-    if (data) setFacilities(data);
+    if (data) {
+      setFacilities(data as Facility[]);
+    }
     setLoading(false);
   }
 
-  const filteredFacilities = facilities.filter(f => {
+  // Haversine formula to calculate distance in km
+  const calculateDistance = (lat1: number, lon1: number, lat2: number, lon2: number) => {
+    const R = 6371; // Radius of the earth in km
+    const dLat = (lat2 - lat1) * (Math.PI / 180);
+    const dLon = (lon2 - lon1) * (Math.PI / 180);
+    const a =
+      Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+      Math.cos(lat1 * (Math.PI / 180)) * Math.cos(lat2 * (Math.PI / 180)) *
+      Math.sin(dLon / 2) * Math.sin(dLon / 2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    const d = R * c;
+    return d;
+  };
+
+  const facilitiesWithDistance = facilities.map(f => {
+    if (userLocation) {
+      const distance = calculateDistance(
+        userLocation.coords.latitude,
+        userLocation.coords.longitude,
+        f.latitude,
+        f.longitude
+      );
+      return { ...f, distance };
+    }
+    return f;
+  }).sort((a, b) => (a.distance || 0) - (b.distance || 0));
+
+  const filteredFacilities = facilitiesWithDistance.filter(f => {
     const matchesSearch = f.name.toLowerCase().includes(search.toLowerCase()) ||
                          f.type.toLowerCase().includes(search.toLowerCase());
 
@@ -39,7 +90,7 @@ export default function ListScreen() {
     return true;
   });
 
-  const renderFilterItem = (filter) => (
+  const renderFilterItem = (filter: string) => (
     <TouchableOpacity
       key={filter}
       style={[
@@ -57,13 +108,15 @@ export default function ListScreen() {
     </TouchableOpacity>
   );
 
-  const renderItem = ({ item }) => (
+  const renderItem = ({ item }: { item: Facility }) => (
     <View style={styles.card}>
       <View style={styles.cardHeader}>
         <View style={[styles.typeBadge, { backgroundColor: item.type === 'Hospital' ? '#4285F4' : '#FBBC05' }]}>
           <Text style={styles.typeBadgeText}>{item.type.toUpperCase()}</Text>
         </View>
-        <Text style={styles.distanceText}>1.2 km</Text>
+        <Text style={styles.distanceText}>
+          {item.distance ? `${item.distance.toFixed(1)} km` : '-- km'}
+        </Text>
       </View>
 
       <View style={styles.titleRow}>
@@ -101,17 +154,15 @@ export default function ListScreen() {
   );
 
   return (
-    <SafeAreaView style={styles.container} edges={['top']}>
-      {/* Custom Header matching screen1.png */}
-      <View style={styles.header}>
-        <View style={styles.headerLeft}>
-          <MaterialIcons name="location-on" size={24} color={colors.sosRed} />
-          <Text style={styles.headerTitle}>HARARE CENTRAL</Text>
+    <View style={styles.container}>
+      <SafeAreaView edges={['top']} style={{ backgroundColor: colors.darkHeader }}>
+        <View style={styles.header}>
+          <Text style={styles.headerTitle}>HEALTHCARE DIRECTORY</Text>
+          <div style={styles.avatarContainer as any}>
+             <MaterialIcons name="person" size={20} color={colors.greyInactive} />
+          </div>
         </View>
-        <View style={styles.avatarContainer}>
-           <MaterialIcons name="person" size={24} color={colors.greyInactive} />
-        </View>
-      </View>
+      </SafeAreaView>
 
       <View style={styles.searchContainer}>
         <MaterialIcons name="search" size={24} color={colors.greyInactive} />
@@ -148,7 +199,10 @@ export default function ListScreen() {
               <Text style={styles.emergencyTitle}>Critical Emergency?</Text>
               <Text style={styles.emergencySubtitle}>Connect directly with MARS Rapid Response</Text>
             </View>
-            <TouchableOpacity style={styles.sosBannerButton}>
+            <TouchableOpacity
+                style={styles.sosBannerButton}
+                onPress={() => Linking.openURL('tel:999')}
+            >
                <Text style={styles.sosBannerButtonText}>CALL SOS</Text>
             </TouchableOpacity>
           </View>
@@ -159,7 +213,7 @@ export default function ListScreen() {
           </View>
         }
       />
-    </SafeAreaView>
+    </View>
   );
 }
 
@@ -169,31 +223,27 @@ const styles = StyleSheet.create({
     backgroundColor: colors.background,
   },
   header: {
-    height: 64,
+    height: 60,
     backgroundColor: colors.darkHeader,
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingHorizontal: spacing.marginMobile,
-  },
-  headerLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
+    paddingHorizontal: 20,
   },
   headerTitle: {
-    ...typography.h3,
+    fontFamily: 'Montserrat_700Bold',
+    fontSize: 14,
+    letterSpacing: 2,
     color: colors.white,
-    fontWeight: '800',
   },
   avatarContainer: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
+    width: 36,
+    height: 36,
+    borderRadius: 18,
     backgroundColor: colors.white,
     justifyContent: 'center',
     alignItems: 'center',
-    borderWidth: 2,
+    borderWidth: 1.5,
     borderColor: colors.primary,
   },
   searchContainer: {
