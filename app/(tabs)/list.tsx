@@ -40,6 +40,53 @@ interface Facility {
   hours?: string;
 }
 
+const FALLBACK_FACILITIES: Facility[] = [
+  {
+    id: 1,
+    name: 'Parirenyatwa Group of Hospitals',
+    type: 'Hospital',
+    status: 'Open',
+    address: 'Mazowe St, Harare',
+    description: 'Largest referral hospital in Zimbabwe with specialized trauma and maternity wings.',
+    phone: '+263 24 2701555',
+    latitude: -17.8136,
+    longitude: 31.0427
+  },
+  {
+    id: 2,
+    name: 'Avenues Clinic',
+    type: 'Clinic',
+    status: 'Open',
+    address: 'Baines Ave, Harare',
+    description: 'Private multi-disciplinary hospital providing high-quality healthcare services.',
+    phone: '+263 24 2251180',
+    latitude: -17.8219,
+    longitude: 31.0494
+  },
+  {
+    id: 3,
+    name: 'Harare Central Hospital',
+    type: 'Hospital',
+    status: 'Open',
+    address: 'Southerton, Harare',
+    description: 'Major government hospital serving the southern districts of Harare.',
+    phone: '+263 24 2621100',
+    latitude: -17.8547,
+    longitude: 31.0286
+  },
+  {
+    id: 4,
+    name: 'Corporate 24 Hospital',
+    type: 'Hospital',
+    status: 'Open',
+    address: 'Belgravia, Harare',
+    description: '24-hour private emergency and outpatient facility.',
+    phone: '+263 86 77000243',
+    latitude: -17.8023,
+    longitude: 31.0415
+  }
+];
+
 // ============================================
 // CONSTANTS
 // ============================================
@@ -58,25 +105,36 @@ export default function ListScreen() {
   // Get user location and fetch facilities on mount
   useEffect(() => {
     (async () => {
-      const { status } = await Location.requestForegroundPermissionsAsync();
-      if (status === 'granted') {
-        const location = await Location.getCurrentPositionAsync({});
-        setUserLocation(location);
+      try {
+        const { status } = await Location.requestForegroundPermissionsAsync();
+        if (status === 'granted') {
+          const location = await Location.getCurrentPositionAsync({});
+          setUserLocation(location);
+        }
+      } catch (e) {
+        console.warn('Location error:', e);
+      } finally {
+        fetchFacilities();
       }
-      fetchFacilities();
     })();
   }, []);
 
   // Fetch facilities from Supabase
   async function fetchFacilities() {
-    const { data, error } = await supabase.from('facilities').select('*');
-    if (error) {
-      console.error('Error fetching facilities:', error);
+    try {
+      const { data, error } = await supabase.from('facilities').select('*');
+      if (data && data.length > 0) {
+        setFacilities(data as Facility[]);
+      } else {
+        console.log('No data from Supabase, using fallbacks');
+        setFacilities(FALLBACK_FACILITIES);
+      }
+    } catch (error) {
+      console.error('Supabase error:', error);
+      setFacilities(FALLBACK_FACILITIES);
+    } finally {
+      setLoading(false);
     }
-    if (data) {
-      setFacilities(data as Facility[]);
-    }
-    setLoading(false);
   }
 
   // Haversine formula to calculate distance in km
@@ -241,9 +299,9 @@ export default function ListScreen() {
         {/* FIXED: Changed <div> to <View> */}
         <View style={styles.header}>
           <Text style={styles.headerTitle}>HEALTHCARE DIRECTORY</Text>
-          <View style={styles.avatarContainer}>
-            <MaterialIcons name="person" size={20} color={colors.greyInactive} />
-          </View>
+          <div style={styles.avatarContainer as any}>
+             <MaterialIcons name="person" size={20} color={colors.greyInactive} />
+          </div>
         </View>
       </SafeAreaView>
 
