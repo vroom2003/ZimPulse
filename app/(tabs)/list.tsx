@@ -296,12 +296,12 @@ export default function ListScreen() {
     <View style={styles.container}>
       {/* Header */}
       <SafeAreaView edges={['top']} style={{ backgroundColor: colors.darkHeader }}>
-        {/* FIXED: Changed <div> to <View> */}
+        {/* Changed <div> to <View> */}
         <View style={styles.header}>
           <Text style={styles.headerTitle}>HEALTHCARE DIRECTORY</Text>
-          <div style={styles.avatarContainer as any}>
+          <View style={styles.avatarContainer as any}>
              <MaterialIcons name="person" size={20} color={colors.greyInactive} />
-          </div>
+          </View>
         </View>
       </SafeAreaView>
 
