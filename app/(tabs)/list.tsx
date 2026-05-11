@@ -14,7 +14,7 @@ const FILTER_OPTIONS = ['All Facilities', 'Hospitals', 'Clinics', 'Open Now'];
 interface Facility {
   id: number;
   name: string;
-  type: 'Hospital' | 'Clinic';
+  type: 'hospital' | 'clinic';
   status: 'Open' | 'Closed';
   address: string;
   description?: string;
@@ -22,35 +22,41 @@ interface Facility {
   latitude: number;
   longitude: number;
   distance?: number;
+  services?: string[];
+  wait_time?: number;
 }
 
 const FALLBACK_FACILITIES: Facility[] = [
   {
     id: 1,
     name: 'Parirenyatwa Group of Hospitals',
-    type: 'Hospital',
+    type: 'hospital',
     status: 'Open',
     address: 'Mazowe St, Harare',
     description: 'Largest referral hospital in Zimbabwe with specialized trauma and maternity wings.',
     phone: '+263 24 2701555',
     latitude: -17.8136,
-    longitude: 31.0427
+    longitude: 31.0427,
+    wait_time: 15,
+    services: ['Trauma', 'Maternity', 'Surgery']
   },
   {
     id: 2,
     name: 'Avenues Clinic',
-    type: 'Clinic',
+    type: 'clinic',
     status: 'Open',
     address: 'Baines Ave, Harare',
     description: 'Private multi-disciplinary hospital providing high-quality healthcare services.',
     phone: '+263 24 2251180',
     latitude: -17.8219,
-    longitude: 31.0494
+    longitude: 31.0494,
+    wait_time: 5,
+    services: ['Emergency', 'Pediatrics', 'Radiology']
   },
   {
     id: 3,
     name: 'Harare Central Hospital',
-    type: 'Hospital',
+    type: 'hospital',
     status: 'Open',
     address: 'Southerton, Harare',
     description: 'Major government hospital serving the southern districts of Harare.',
@@ -61,7 +67,7 @@ const FALLBACK_FACILITIES: Facility[] = [
   {
     id: 4,
     name: 'Corporate 24 Hospital',
-    type: 'Hospital',
+    type: 'hospital',
     status: 'Open',
     address: 'Belgravia, Harare',
     description: '24-hour private emergency and outpatient facility.',
@@ -144,8 +150,8 @@ export default function ListScreen() {
 
     if (!matchesSearch) return false;
 
-    if (selectedFilter === 'Hospitals') return f.type === 'Hospital';
-    if (selectedFilter === 'Clinics') return f.type === 'Clinic';
+    if (selectedFilter === 'Hospitals') return f.type === 'hospital';
+    if (selectedFilter === 'Clinics') return f.type === 'clinic';
     if (selectedFilter === 'Open Now') return f.status === 'Open';
 
     return true;
@@ -172,8 +178,16 @@ export default function ListScreen() {
   const renderItem = ({ item }: { item: Facility }) => (
     <View style={styles.card}>
       <View style={styles.cardHeader}>
-        <View style={[styles.typeBadge, { backgroundColor: item.type === 'Hospital' ? '#4285F4' : '#FBBC05' }]}>
-          <Text style={styles.typeBadgeText}>{item.type.toUpperCase()}</Text>
+        <View style={styles.badgeRow}>
+          <View style={[styles.typeBadge, { backgroundColor: item.type === 'hospital' ? '#4285F4' : '#FBBC05' }]}>
+            <Text style={styles.typeBadgeText}>{item.type.toUpperCase()}</Text>
+          </View>
+          {item.wait_time !== undefined && (
+            <View style={styles.waitTimeBadge}>
+              <MaterialIcons name="access-time" size={12} color={colors.secondary} />
+              <Text style={styles.waitTimeText}>{item.wait_time} min wait</Text>
+            </View>
+          )}
         </View>
         <Text style={styles.distanceText}>
           {item.distance ? `${item.distance.toFixed(1)} km` : '-- km'}
@@ -193,6 +207,19 @@ export default function ListScreen() {
       <Text style={styles.cardDescription} numberOfLines={2}>
         {item.address}. {item.description || 'Level 4 Trauma Center with specialized surgical units and critical care.'}
       </Text>
+
+      {item.services && item.services.length > 0 && (
+        <View style={styles.servicesRow}>
+          {item.services.slice(0, 3).map((service, idx) => (
+            <View key={idx} style={styles.serviceChip}>
+              <Text style={styles.serviceChipText}>{service}</Text>
+            </View>
+          ))}
+          {item.services.length > 3 && (
+            <Text style={styles.moreServicesText}>+{item.services.length - 3} more</Text>
+          )}
+        </View>
+      )}
 
       <View style={styles.buttonRow}>
         <TouchableOpacity
@@ -365,10 +392,29 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 8,
   },
+  badgeRow: {
+    flexDirection: 'row',
+    gap: 8,
+    alignItems: 'center',
+  },
   typeBadge: {
     paddingHorizontal: 8,
     paddingVertical: 4,
     borderRadius: 4,
+  },
+  waitTimeBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: colors.secondaryFixed,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 4,
+    gap: 2,
+  },
+  waitTimeText: {
+    fontSize: 10,
+    fontWeight: '700',
+    color: colors.onSecondaryFixed,
   },
   typeBadgeText: {
     color: colors.white,
@@ -410,7 +456,30 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: colors.greyInactive,
     lineHeight: 20,
+    marginBottom: 12,
+  },
+  servicesRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 6,
     marginBottom: 16,
+    alignItems: 'center',
+  },
+  serviceChip: {
+    backgroundColor: colors.surfaceContainer,
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 12,
+  },
+  serviceChipText: {
+    fontSize: 10,
+    color: colors.onSurfaceVariant,
+    fontWeight: '600',
+  },
+  moreServicesText: {
+    fontSize: 10,
+    color: colors.greyInactive,
+    fontWeight: '600',
   },
   buttonRow: {
     flexDirection: 'row',
