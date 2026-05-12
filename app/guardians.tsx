@@ -70,6 +70,17 @@ export default function GuardiansScreen() {
     }
   }
 
+  async function deleteGuardian(id: string) {
+    try {
+      const { error } = await supabase.from('guardians').delete().eq('id', id);
+      if (error) throw error;
+      setGuardians(guardians.filter(g => g.id !== id));
+    } catch (error) {
+      Alert.alert('Error', 'Failed to delete guardian');
+      console.error(error);
+    }
+  }
+
   const renderItem = ({ item }: { item: Guardian }) => (
     <View style={styles.card}>
       <View style={styles.cardIcon}>
@@ -82,7 +93,7 @@ export default function GuardiansScreen() {
       <TouchableOpacity
         onPress={() => Alert.alert('Delete', 'Would you like to remove this guardian?', [
             { text: 'Cancel', style: 'cancel' },
-            { text: 'Delete', style: 'destructive', onPress: () => {} }
+            { text: 'Delete', style: 'destructive', onPress: () => deleteGuardian(item.id) }
         ])}
       >
         <MaterialIcons name="delete-outline" size={24} color={colors.greyInactive} />
