@@ -160,14 +160,14 @@ export default function HomeScreen() {
           <TouchableOpacity
             style={styles.actionItem}
             activeOpacity={0.7}
-            onPress={() => Alert.alert('Ambulance Request', 'In a real emergency, this would connect you to the nearest dispatch center.')}
+            onPress={() => Linking.openURL('tel:999')}
           >
             <View style={[styles.actionIcon, { backgroundColor: colors.errorContainer }]}>
               <FontAwesome5 name="ambulance" size={20} color={colors.onErrorContainer} />
             </View>
             <View style={styles.actionTextContainer}>
               <Text style={styles.actionTitle}>Request Ambulance</Text>
-              <Text style={styles.actionSubtitle}>Fast-track dispatch service</Text>
+              <Text style={styles.actionSubtitle}>Direct call to dispatch center</Text>
             </View>
             <MaterialIcons name="chevron-right" size={24} color={colors.onSurfaceVariant} />
           </TouchableOpacity>
@@ -187,7 +187,11 @@ export default function HomeScreen() {
             <MaterialIcons name="chevron-right" size={24} color={colors.onSurfaceVariant} />
           </TouchableOpacity>
 
-          <TouchableOpacity style={styles.actionItem} activeOpacity={0.7}>
+          <TouchableOpacity
+            style={styles.actionItem}
+            activeOpacity={0.7}
+            onPress={() => Linking.openURL('https://www.redcross.org/get-help/how-to-prepare-for-emergencies/hands-only-cpr.html')}
+          >
             <View style={[styles.actionIcon, { backgroundColor: '#FFF9C4' }]}>
               <MaterialIcons name="medical-services" size={24} color={colors.tertiary} />
             </View>

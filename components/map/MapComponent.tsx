@@ -7,8 +7,12 @@ import { shadows } from '@/src/theme/shadows';
 import { MaterialIcons } from '@expo/vector-icons';
 import { supabase } from '@/src/services/supabaseClient';
 
+import { useRouter } from 'expo-router';
+
 export default function MapScreen() {
   const [facilities, setFacilities] = useState<any[]>([]);
+  const [selectedFacility, setSelectedFacility] = useState<any>(null);
+  const router = useRouter();
 
   useEffect(() => {
     fetchFacilities();
@@ -55,14 +59,46 @@ export default function MapScreen() {
         {/* Floating Info Card */}
         <View style={styles.floatingCard}>
           <View style={styles.cardIndicator} />
-          <View style={styles.cardHeader}>
-            <Text style={styles.cardTitle}>Find Healthcare</Text>
-            <Text style={styles.cardDistance}>Within 5km</Text>
-          </View>
-          <View style={styles.searchBar}>
-            <MaterialIcons name="search" size={20} color={colors.greyInactive} />
-            <Text style={styles.searchPlaceholder}>Search hospital or clinic...</Text>
-          </View>
+
+          {selectedFacility ? (
+             <TouchableOpacity
+                style={styles.selectedCard}
+                onPress={() => router.push(`/facility/${selectedFacility.id}` as any)}
+             >
+                <View style={styles.selectedHeader}>
+                   <View style={[styles.typeBadge, { backgroundColor: selectedFacility.type?.toLowerCase() === 'hospital' ? colors.secondary : colors.tertiaryContainer }]}>
+                      <Text style={styles.typeBadgeText}>{(selectedFacility.type || '').toUpperCase()}</Text>
+                   </View>
+                   <Text style={styles.waitTimeText}>{selectedFacility.wait_time || 15} mins</Text>
+                </View>
+                <Text style={styles.selectedTitle}>{selectedFacility.name}</Text>
+                <Text style={styles.selectedAddress}>{selectedFacility.address}</Text>
+                <View style={styles.cardButtons}>
+                    <View style={styles.miniButton}>
+                        <MaterialIcons name="call" size={18} color={colors.secondary} />
+                        <Text style={styles.miniButtonText}>Call</Text>
+                    </View>
+                    <View style={[styles.miniButton, { backgroundColor: colors.primary }]}>
+                        <MaterialIcons name="near-me" size={18} color={colors.white} />
+                        <Text style={[styles.miniButtonText, { color: colors.white }]}>Navigate</Text>
+                    </View>
+                </View>
+             </TouchableOpacity>
+          ) : (
+            <>
+              <View style={styles.cardHeader}>
+                <Text style={styles.cardTitle}>Find Healthcare</Text>
+                <Text style={styles.cardDistance}>Within 5km</Text>
+              </View>
+              <TouchableOpacity
+                style={styles.searchBar}
+                onPress={() => facilities.length > 0 && setSelectedFacility(facilities[0])}
+              >
+                <MaterialIcons name="search" size={20} color={colors.greyInactive} />
+                <Text style={styles.searchPlaceholder}>Search hospital or clinic...</Text>
+              </TouchableOpacity>
+            </>
+          )}
         </View>
       </View>
     </View>
@@ -163,4 +199,57 @@ const styles = StyleSheet.create({
     ...(typography.bodyMd as any),
     color: colors.greyInactive,
   },
+  selectedCard: {
+      gap: 8,
+  },
+  selectedHeader: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+  },
+  typeBadge: {
+      paddingHorizontal: 8,
+      paddingVertical: 2,
+      borderRadius: 4,
+  },
+  typeBadgeText: {
+      fontSize: 10,
+      fontWeight: '800',
+      color: colors.white,
+  },
+  waitTimeText: {
+      fontSize: 12,
+      fontWeight: '700',
+      color: colors.primary,
+  },
+  selectedTitle: {
+      fontSize: 20,
+      fontWeight: '700',
+      color: colors.onSurface,
+  },
+  selectedAddress: {
+      fontSize: 14,
+      color: colors.greyInactive,
+  },
+  cardButtons: {
+      flexDirection: 'row',
+      gap: 12,
+      marginTop: 8,
+  },
+  miniButton: {
+      flex: 1,
+      flexDirection: 'row',
+      height: 40,
+      borderRadius: 8,
+      borderWidth: 1,
+      borderColor: colors.outlineVariant,
+      justifyContent: 'center',
+      alignItems: 'center',
+      gap: 6,
+  },
+  miniButtonText: {
+      fontSize: 14,
+      fontWeight: '600',
+      color: colors.secondary,
+  }
 });

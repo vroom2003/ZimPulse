@@ -1,43 +1,30 @@
-// app/(tabs)/list.tsx
-//
-// List Screen - Shows facilities from Supabase with search, filters,
-// distance calculation, and Call/Navigate actions.
-
+import React, { useEffect, useState } from 'react';
+import { StyleSheet, Text, View, FlatList, TouchableOpacity, TextInput, ScrollView, Linking, Image } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialIcons } from '@expo/vector-icons';
 import * as Location from 'expo-location';
-import React, { useEffect, useState } from 'react';
-import {
-  FlatList,
-  Linking,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View,
-} from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { supabase } from '../../src/services/supabaseClient';
-import { colors } from '../../src/theme/colors';
-import { shadows } from '../../src/theme/shadows';
-import { spacing } from '../../src/theme/spacing';
-import { typography } from '../../src/theme/typography';
+import { useRouter } from 'expo-router';
+import { colors } from '@/src/theme/colors';
+import { typography } from '@/src/theme/typography';
+import { spacing } from '@/src/theme/spacing';
+import { shadows } from '@/src/theme/shadows';
+import { supabase } from '@/src/services/supabaseClient';
 
-// ============================================
-// TYPES
-// ============================================
+const FILTER_OPTIONS = ['All Facilities', 'Hospitals', 'Clinics', 'Open Now'];
+
 interface Facility {
   id: number;
   name: string;
-  type: string;
-  status: string;
+  type: 'hospital' | 'clinic';
+  status: 'Open' | 'Closed';
   address: string;
   description?: string;
   phone?: string;
   latitude: number;
   longitude: number;
   distance?: number;
-  hours?: string;
+  services?: string[];
+  wait_time?: number;
 }
 
 const FALLBACK_FACILITIES: Facility[] = [
@@ -91,22 +78,14 @@ const FALLBACK_FACILITIES: Facility[] = [
   }
 ];
 
-// ============================================
-// CONSTANTS
-// ============================================
-const FILTER_OPTIONS = ['All Facilities', 'Hospitals', 'Clinics', 'Open Now'];
-
-// ============================================
-// COMPONENT
-// ============================================
 export default function ListScreen() {
+  const router = useRouter();
   const [facilities, setFacilities] = useState<Facility[]>([]);
   const [search, setSearch] = useState('');
   const [selectedFilter, setSelectedFilter] = useState('All Facilities');
   const [loading, setLoading] = useState(true);
   const [userLocation, setUserLocation] = useState<Location.LocationObject | null>(null);
 
-  // Get user location and fetch facilities on mount
   useEffect(() => {
     (async () => {
       try {
@@ -123,7 +102,6 @@ export default function ListScreen() {
     })();
   }, []);
 
-  // Fetch facilities from Supabase
   async function fetchFacilities() {
     try {
       const { data, error } = await supabase.from('facilities').select('*');
@@ -143,7 +121,7 @@ export default function ListScreen() {
 
   // Haversine formula to calculate distance in km
   const calculateDistance = (lat1: number, lon1: number, lat2: number, lon2: number) => {
-    const R = 6371;
+    const R = 6371; // Radius of the earth in km
     const dLat = (lat2 - lat1) * (Math.PI / 180);
     const dLon = (lon2 - lon1) * (Math.PI / 180);
     const a =
@@ -155,8 +133,7 @@ export default function ListScreen() {
     return d;
   };
 
-  // Add distance to each facility and sort by closest
-  const facilitiesWithDistance = facilities.map((f) => {
+  const facilitiesWithDistance = facilities.map(f => {
     if (userLocation) {
       const distance = calculateDistance(
         userLocation.coords.latitude,
@@ -169,147 +146,116 @@ export default function ListScreen() {
     return f;
   }).sort((a, b) => (a.distance || 0) - (b.distance || 0));
 
-  // Filter facilities based on search and selected filter
-  const filteredFacilities = facilitiesWithDistance.filter((f) => {
-    const matchesSearch =
-      f.name.toLowerCase().includes(search.toLowerCase()) ||
-      f.type.toLowerCase().includes(search.toLowerCase());
+  const filteredFacilities = facilitiesWithDistance.filter(f => {
+    const facilityType = f.type?.toLowerCase() || '';
+    const facilityStatus = f.status?.toLowerCase() || '';
+    const matchesSearch = f.name.toLowerCase().includes(search.toLowerCase()) ||
+                         facilityType.includes(search.toLowerCase());
 
     if (!matchesSearch) return false;
 
-    if (selectedFilter === 'Hospitals') return f.type === 'hospital';
-    if (selectedFilter === 'Clinics') return f.type === 'clinic';
-    if (selectedFilter === 'Open Now') return f.status === 'open';
+    if (selectedFilter === 'Hospitals') return facilityType === 'hospital';
+    if (selectedFilter === 'Clinics') return facilityType === 'clinic';
+    if (selectedFilter === 'Open Now') return facilityStatus === 'open';
 
     return true;
   });
 
-  // ============================================
-  // RENDER FUNCTIONS
-  // ============================================
-
-  // Render each filter chip
   const renderFilterItem = (filter: string) => (
     <TouchableOpacity
       key={filter}
       style={[
         styles.filterChip,
-        selectedFilter === filter && styles.filterChipSelected,
+        selectedFilter === filter && styles.filterChipSelected
       ]}
       onPress={() => setSelectedFilter(filter)}
     >
-      <Text
-        style={[
-          styles.filterText,
-          selectedFilter === filter && styles.filterTextSelected,
-        ]}
-      >
+      <Text style={[
+        styles.filterText,
+        selectedFilter === filter && styles.filterTextSelected
+      ]}>
         {filter}
       </Text>
     </TouchableOpacity>
   );
 
-  // Render each facility card
-  const renderItem = ({ item }: { item: Facility }) => (
-    <View style={styles.card}>
-      {/* Top Row: Type Badge + Distance */}
-      <View style={styles.cardHeader}>
-        <View
-          style={[
-            styles.typeBadge,
-            {
-              backgroundColor:
-                item.type === 'hospital'
-                  ? colors.secondaryContainer
-                  : colors.tertiaryFixedDim,
-            },
-          ]}
-        >
-          <Text style={styles.typeBadgeText}>
-            {item.type.toUpperCase()}
-          </Text>
-        </View>
-        <Text style={styles.distanceText}>
-          {item.distance ? `${item.distance.toFixed(1)} km` : '-- km'}
-        </Text>
-      </View>
+  const renderItem = ({ item }: { item: Facility }) => {
+    const isHospital = item.type?.toLowerCase() === 'hospital';
+    const isOpen = item.status?.toLowerCase() === 'open';
 
-      {/* Name + Status */}
-      <View style={styles.titleRow}>
+    return (
+      <TouchableOpacity
+        style={styles.card}
+        onPress={() => router.push(`/facility/${item.id}` as any)}
+      >
+        <View style={styles.cardHeader}>
+          <View style={[styles.typeBadge, { backgroundColor: isHospital ? '#4285F4' : '#FBBC05' }]}>
+            <Text style={styles.typeBadgeText}>{(item.type || '').toUpperCase()}</Text>
+          </View>
+          <View style={styles.headerRightInfo}>
+            <Text style={styles.distanceText}>
+                {item.distance ? `${item.distance.toFixed(1)} km` : '-- km'}
+            </Text>
+            <View style={styles.statusRow}>
+                <View style={[styles.statusDot, { backgroundColor: isOpen ? '#A48111' : '#EA4335' }]} />
+                <Text style={[styles.statusText, { color: isOpen ? '#A48111' : '#EA4335' }]}>
+                    {isOpen ? 'OPEN' : 'CLOSED'}
+                </Text>
+            </View>
+          </View>
+        </View>
+
         <Text style={styles.cardTitle}>{item.name}</Text>
-        <View style={styles.statusRow}>
-          <View
-            style={[
-              styles.statusDot,
-              {
-                backgroundColor:
-                  item.status === 'open' ? colors.successGreen : colors.error,
-              },
-            ]}
-          />
-          <Text
-            style={[
-              styles.statusText,
-              {
-                color:
-                  item.status === 'open' ? colors.successGreen : colors.error,
-              },
-            ]}
-          >
-            {item.status === 'open' ? 'OPEN 24/7' : 'CLOSED'}
-          </Text>
+
+        <Text style={styles.cardDescription} numberOfLines={2}>
+            {item.address}. {item.description || 'Level 4 Trauma Center with specialized surgical units and critical care.'}
+        </Text>
+
+        <View style={styles.buttonRow}>
+            <TouchableOpacity
+            style={styles.callButton}
+            onPress={(e) => {
+                e.stopPropagation();
+                item.phone && Linking.openURL(`tel:${item.phone}`);
+            }}
+            >
+                <MaterialIcons name="call" size={20} color={colors.secondary} />
+                <Text style={styles.callButtonText}>Call</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+            style={styles.navigateButton}
+            onPress={(e) => {
+                e.stopPropagation();
+                Linking.openURL(`https://www.google.com/maps/dir/?api=1&destination=${item.latitude},${item.longitude}`);
+            }}
+            >
+                <MaterialIcons name="near-me" size={20} color={colors.white} />
+                <Text style={styles.navigateButtonText}>Navigate</Text>
+            </TouchableOpacity>
         </View>
-      </View>
+      </TouchableOpacity>
+    );
+  };
 
-      {/* Address */}
-      <Text style={styles.cardDescription} numberOfLines={2}>
-        {item.address}.{' '}
-        {item.description ||
-          'Specialized surgical units and critical care.'}
-      </Text>
-
-      {/* Action Buttons */}
-      <View style={styles.buttonRow}>
-        <TouchableOpacity
-          style={styles.callButton}
-          onPress={() => item.phone && Linking.openURL(`tel:${item.phone}`)}
-        >
-          <MaterialIcons name="call" size={20} color={colors.secondary} />
-          <Text style={styles.callButtonText}>Call</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          style={styles.navigateButton}
-          onPress={() =>
-            Linking.openURL(
-              `https://www.google.com/maps/dir/?api=1&destination=${item.latitude},${item.longitude}`
-            )
-          }
-        >
-          <MaterialIcons name="near-me" size={20} color={colors.white} />
-          <Text style={styles.navigateButtonText}>Navigate</Text>
-        </TouchableOpacity>
-      </View>
-    </View>
-  );
-
-  // ============================================
-  // MAIN RENDER
-  // ============================================
   return (
     <View style={styles.container}>
-      {/* Header */}
       <SafeAreaView edges={['top']} style={{ backgroundColor: colors.darkHeader }}>
-        {/* Changed <div> to <View> */}
         <View style={styles.header}>
-          <Text style={styles.headerTitle}>HEALTHCARE DIRECTORY</Text>
-          <View style={styles.avatarContainer as any}>
-             <MaterialIcons name="person" size={20} color={colors.greyInactive} />
+          <View style={styles.headerLeft}>
+            <MaterialIcons name="location-on" size={20} color={colors.sosRed} />
+            <Text style={styles.headerTitle}>HARARE CENTRAL</Text>
+          </View>
+          <View style={styles.avatarContainer}>
+             <Image
+                source={require('@/assets/images/logo.png')}
+                style={styles.headerLogo}
+                resizeMode="contain"
+             />
           </View>
         </View>
       </SafeAreaView>
 
-      {/* Search Bar */}
       <View style={styles.searchContainer}>
         <MaterialIcons name="search" size={24} color={colors.greyInactive} />
         <TextInput
@@ -321,7 +267,6 @@ export default function ListScreen() {
         />
       </View>
 
-      {/* Filter Chips */}
       <View>
         <ScrollView
           horizontal
@@ -332,7 +277,6 @@ export default function ListScreen() {
         </ScrollView>
       </View>
 
-      {/* Facility List */}
       <FlatList
         data={filteredFacilities}
         keyExtractor={(item) => item.id.toString()}
@@ -341,27 +285,23 @@ export default function ListScreen() {
         ListFooterComponent={
           <View style={styles.emergencyBanner}>
             <View style={styles.emergencyIconContainer}>
-              <MaterialIcons name="emergency" size={32} color={colors.primary} />
+               <MaterialIcons name="emergency" size={32} color={colors.primary} />
             </View>
             <View style={styles.emergencyTextContainer}>
               <Text style={styles.emergencyTitle}>Critical Emergency?</Text>
-              <Text style={styles.emergencySubtitle}>
-                Connect directly with MARS Rapid Response
-              </Text>
+              <Text style={styles.emergencySubtitle}>Connect directly with MARS Rapid Response</Text>
             </View>
             <TouchableOpacity
-              style={styles.sosBannerButton}
-              onPress={() => Linking.openURL('tel:999')}
+                style={styles.sosBannerButton}
+                onPress={() => Linking.openURL('tel:999')}
             >
-              <Text style={styles.sosBannerButtonText}>CALL SOS</Text>
+               <Text style={styles.sosBannerButtonText}>CALL SOS</Text>
             </TouchableOpacity>
           </View>
         }
         ListEmptyComponent={
           <View style={styles.empty}>
-            <Text style={styles.emptyText}>
-              {loading ? 'Loading...' : 'No facilities found'}
-            </Text>
+            <Text style={styles.emptyText}>{loading ? 'Loading...' : 'No facilities found'}</Text>
           </View>
         }
       />
@@ -369,9 +309,6 @@ export default function ListScreen() {
   );
 }
 
-// ============================================
-// STYLES
-// ============================================
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -385,21 +322,28 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: 20,
   },
+  headerLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
   headerTitle: {
     fontFamily: 'Montserrat_700Bold',
-    fontSize: 14,
-    letterSpacing: 2,
+    fontSize: 18,
     color: colors.white,
   },
   avatarContainer: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
     backgroundColor: colors.white,
     justifyContent: 'center',
     alignItems: 'center',
-    borderWidth: 1.5,
-    borderColor: colors.primary,
+    overflow: 'hidden',
+  },
+  headerLogo: {
+    width: 32,
+    height: 32,
   },
   searchContainer: {
     flexDirection: 'row',
@@ -428,7 +372,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingVertical: 10,
     borderRadius: 25,
-    backgroundColor: colors.surfaceContainerHigh,
+    backgroundColor: '#E8E8E8',
   },
   filterChipSelected: {
     backgroundColor: colors.primary,
@@ -456,17 +400,15 @@ const styles = StyleSheet.create({
   cardHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'center',
+    alignItems: 'flex-start',
     marginBottom: 8,
   },
-  badgeRow: {
-    flexDirection: 'row',
-    gap: 8,
-    alignItems: 'center',
+  headerRightInfo: {
+    alignItems: 'flex-end',
   },
   typeBadge: {
-    paddingHorizontal: 8,
-    paddingVertical: 4,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
     borderRadius: 4,
   },
   waitTimeBadge: {
@@ -487,13 +429,11 @@ const styles = StyleSheet.create({
     color: colors.white,
     fontSize: 10,
     fontWeight: '800',
-    fontFamily: 'Inter_700Bold',
   },
   distanceText: {
     fontSize: 12,
     fontWeight: '700',
     color: colors.secondary,
-    fontFamily: 'Inter_700Bold',
   },
   titleRow: {
     flexDirection: 'row',
@@ -506,7 +446,6 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: colors.onSurface,
     flex: 1,
-    fontFamily: 'Manrope_700Bold',
   },
   statusRow: {
     flexDirection: 'row',
@@ -521,7 +460,6 @@ const styles = StyleSheet.create({
   statusText: {
     fontSize: 10,
     fontWeight: '800',
-    fontFamily: 'Inter_700Bold',
   },
   cardDescription: {
     fontSize: 14,
@@ -534,7 +472,23 @@ const styles = StyleSheet.create({
     flexWrap: 'wrap',
     gap: 6,
     marginBottom: 16,
-    fontFamily: 'Inter_400Regular',
+    alignItems: 'center',
+  },
+  serviceChip: {
+    backgroundColor: colors.surfaceContainer,
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 12,
+  },
+  serviceChipText: {
+    fontSize: 10,
+    color: colors.onSurfaceVariant,
+    fontWeight: '600',
+  },
+  moreServicesText: {
+    fontSize: 10,
+    color: colors.greyInactive,
+    fontWeight: '600',
   },
   buttonRow: {
     flexDirection: 'row',
@@ -547,7 +501,7 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     borderWidth: 1,
     borderColor: colors.outlineVariant,
-    backgroundColor: colors.surfaceContainerLow,
+    backgroundColor: '#F3F6F9',
     justifyContent: 'center',
     alignItems: 'center',
     gap: 8,
@@ -556,7 +510,6 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
     color: colors.secondary,
-    fontFamily: 'Inter_600SemiBold',
   },
   navigateButton: {
     flex: 1,
@@ -572,11 +525,10 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
     color: colors.white,
-    fontFamily: 'Inter_600SemiBold',
   },
   emergencyBanner: {
     flexDirection: 'row',
-    backgroundColor: colors.secondaryFixed,
+    backgroundColor: '#D7E5FF',
     padding: 16,
     borderRadius: 16,
     alignItems: 'center',
@@ -598,12 +550,10 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: '700',
     color: colors.onSurface,
-    fontFamily: 'Manrope_700Bold',
   },
   emergencySubtitle: {
     fontSize: 12,
     color: colors.secondary,
-    fontFamily: 'Inter_400Regular',
   },
   sosBannerButton: {
     backgroundColor: colors.white,
@@ -615,7 +565,6 @@ const styles = StyleSheet.create({
     color: colors.primary,
     fontWeight: '700',
     fontSize: 14,
-    fontFamily: 'Inter_700Bold',
   },
   empty: {
     marginTop: 40,
@@ -624,5 +573,5 @@ const styles = StyleSheet.create({
   emptyText: {
     ...typography.bodyMd,
     color: colors.greyInactive,
-  },
+  }
 });
