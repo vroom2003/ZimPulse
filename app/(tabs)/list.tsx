@@ -44,29 +44,33 @@ const FALLBACK_FACILITIES: Facility[] = [
   {
     id: 1,
     name: 'Parirenyatwa Group of Hospitals',
-    type: 'Hospital',
+    type: 'hospital',
     status: 'Open',
     address: 'Mazowe St, Harare',
     description: 'Largest referral hospital in Zimbabwe with specialized trauma and maternity wings.',
     phone: '+263 24 2701555',
     latitude: -17.8136,
-    longitude: 31.0427
+    longitude: 31.0427,
+    wait_time: 15,
+    services: ['Trauma', 'Maternity', 'Surgery']
   },
   {
     id: 2,
     name: 'Avenues Clinic',
-    type: 'Clinic',
+    type: 'clinic',
     status: 'Open',
     address: 'Baines Ave, Harare',
     description: 'Private multi-disciplinary hospital providing high-quality healthcare services.',
     phone: '+263 24 2251180',
     latitude: -17.8219,
-    longitude: 31.0494
+    longitude: 31.0494,
+    wait_time: 5,
+    services: ['Emergency', 'Pediatrics', 'Radiology']
   },
   {
     id: 3,
     name: 'Harare Central Hospital',
-    type: 'Hospital',
+    type: 'hospital',
     status: 'Open',
     address: 'Southerton, Harare',
     description: 'Major government hospital serving the southern districts of Harare.',
@@ -77,7 +81,7 @@ const FALLBACK_FACILITIES: Facility[] = [
   {
     id: 4,
     name: 'Corporate 24 Hospital',
-    type: 'Hospital',
+    type: 'hospital',
     status: 'Open',
     address: 'Belgravia, Harare',
     description: '24-hour private emergency and outpatient facility.',
@@ -455,10 +459,29 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 8,
   },
+  badgeRow: {
+    flexDirection: 'row',
+    gap: 8,
+    alignItems: 'center',
+  },
   typeBadge: {
     paddingHorizontal: 8,
     paddingVertical: 4,
     borderRadius: 4,
+  },
+  waitTimeBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: colors.secondaryFixed,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 4,
+    gap: 2,
+  },
+  waitTimeText: {
+    fontSize: 10,
+    fontWeight: '700',
+    color: colors.onSecondaryFixed,
   },
   typeBadgeText: {
     color: colors.white,
@@ -504,6 +527,12 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: colors.greyInactive,
     lineHeight: 20,
+    marginBottom: 12,
+  },
+  servicesRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 6,
     marginBottom: 16,
     fontFamily: 'Inter_400Regular',
   },

@@ -8,6 +8,7 @@ import {
     Text,
     TouchableOpacity,
     View,
+    Alert,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
@@ -156,13 +157,32 @@ export default function HomeScreen() {
         {/* ========== RAPID ACTIONS ========== */}
         <Text style={styles.sectionTitle}>Rapid Actions</Text>
         <View style={styles.actionsList}>
-          <TouchableOpacity style={styles.actionItem} activeOpacity={0.7}>
+          <TouchableOpacity
+            style={styles.actionItem}
+            activeOpacity={0.7}
+            onPress={() => Alert.alert('Ambulance Request', 'In a real emergency, this would connect you to the nearest dispatch center.')}
+          >
             <View style={[styles.actionIcon, { backgroundColor: colors.errorContainer }]}>
               <FontAwesome5 name="ambulance" size={20} color={colors.onErrorContainer} />
             </View>
             <View style={styles.actionTextContainer}>
               <Text style={styles.actionTitle}>Request Ambulance</Text>
               <Text style={styles.actionSubtitle}>Fast-track dispatch service</Text>
+            </View>
+            <MaterialIcons name="chevron-right" size={24} color={colors.onSurfaceVariant} />
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={styles.actionItem}
+            activeOpacity={0.7}
+            onPress={() => router.push('/guardians' as any)}
+          >
+            <View style={[styles.actionIcon, { backgroundColor: colors.secondaryFixed }]}>
+              <MaterialIcons name="people" size={24} color={colors.onSecondaryFixed} />
+            </View>
+            <View style={styles.actionTextContainer}>
+              <Text style={styles.actionTitle}>Manage Guardians</Text>
+              <Text style={styles.actionSubtitle}>Trusted emergency contacts</Text>
             </View>
             <MaterialIcons name="chevron-right" size={24} color={colors.onSurfaceVariant} />
           </TouchableOpacity>
