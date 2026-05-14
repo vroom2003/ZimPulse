@@ -310,7 +310,7 @@ export default function ListScreen() {
         renderItem={loading ? renderSkeleton : renderItem}
         contentContainerStyle={styles.listContent}
         refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.white} />
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} colors={[colors.primary]} />
         }
         ListFooterComponent={
           <View style={styles.emergencyBanner}>

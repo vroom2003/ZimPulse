@@ -129,7 +129,7 @@ export default function FacilityDetailScreen() {
                 <Text style={styles.sectionTitle}>Available Services</Text>
             </View>
             <View style={styles.servicesGrid}>
-                {['ER', 'ICU', 'X-Ray', 'Laboratory', 'Pharmacy', 'Surgery'].map((service) => (
+                {(facility.services && facility.services.length > 0 ? facility.services : ['ER', 'ICU', 'X-Ray', 'Laboratory', 'Pharmacy', 'Surgery']).map((service: string) => (
                     <View key={service} style={styles.serviceItem}>
                         <MaterialIcons
                             name="check-circle"
