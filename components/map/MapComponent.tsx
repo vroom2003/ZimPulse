@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { StyleSheet, Text, View, Platform } from 'react-native';
+import { StyleSheet, Text, View, Platform, TouchableOpacity, Linking } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { colors } from '@/src/theme/colors';
 import { typography } from '@/src/theme/typography';
@@ -74,14 +74,20 @@ export default function MapScreen() {
                 <Text style={styles.selectedTitle}>{selectedFacility.name}</Text>
                 <Text style={styles.selectedAddress}>{selectedFacility.address}</Text>
                 <View style={styles.cardButtons}>
-                    <View style={styles.miniButton}>
+                    <TouchableOpacity
+                        style={styles.miniButton}
+                        onPress={() => selectedFacility.phone && Linking.openURL(`tel:${selectedFacility.phone}`)}
+                    >
                         <MaterialIcons name="call" size={18} color={colors.secondary} />
                         <Text style={styles.miniButtonText}>Call</Text>
-                    </View>
-                    <View style={[styles.miniButton, { backgroundColor: colors.primary }]}>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                        style={[styles.miniButton, { backgroundColor: colors.primary }]}
+                        onPress={() => Linking.openURL(`https://www.google.com/maps/dir/?api=1&destination=${selectedFacility.latitude},${selectedFacility.longitude}`)}
+                    >
                         <MaterialIcons name="near-me" size={18} color={colors.white} />
                         <Text style={[styles.miniButtonText, { color: colors.white }]}>Navigate</Text>
-                    </View>
+                    </TouchableOpacity>
                 </View>
              </TouchableOpacity>
           ) : (

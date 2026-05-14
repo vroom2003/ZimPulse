@@ -49,34 +49,32 @@ export default function FacilityDetailScreen() {
 
   return (
     <View style={styles.container}>
-      <SafeAreaView edges={['top']} style={{ backgroundColor: colors.darkHeader }}>
+      <View style={styles.heroBackground} />
+      <SafeAreaView edges={['top']} style={{ backgroundColor: 'transparent' }}>
         <View style={styles.header}>
           <TouchableOpacity onPress={() => router.back()}>
             <MaterialIcons name="arrow-back" size={24} color={colors.white} />
           </TouchableOpacity>
-          <Text style={styles.headerTitle}>HARARE CENTRAL</Text>
+          <Text style={styles.headerTitle}>FACILITY DETAILS</Text>
           <View style={styles.avatarContainer}>
              <MaterialIcons name="person" size={20} color={colors.greyInactive} />
           </View>
         </View>
       </SafeAreaView>
 
-      <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
+      <ScrollView style={styles.content} showsVerticalScrollIndicator={false} bounces={false}>
         {/* Hero Section */}
         <View style={styles.hero}>
-          <Image
-            source={require('@/assets/images/logo.png')}
-            style={styles.heroImage}
-            resizeMode="cover"
-          />
           <View style={styles.heroOverlay}>
              <View style={styles.traumaBadge}>
                 <MaterialIcons name="emergency" size={14} color={colors.white} />
                 <Text style={styles.traumaBadgeText}>LEVEL 1 TRAUMA CENTER</Text>
              </View>
              <Text style={styles.heroTitle}>{facility.name}</Text>
-             <Text style={styles.heroZimPulse}>ZimPulse</Text>
-             <Text style={styles.heroTagline}>EVERY HEARTBEAT COUNTS.</Text>
+             <Text style={styles.heroSubTitle}>Emergency Medical Facility</Text>
+             <View style={styles.brandBadge}>
+                <Text style={styles.brandTagline}>ZIMPULSE VERIFIED</Text>
+             </View>
           </View>
         </View>
 
@@ -85,16 +83,16 @@ export default function FacilityDetailScreen() {
            <View style={styles.infoRow}>
               <View style={styles.statusSection}>
                  <View style={styles.statusHeader}>
-                    <View style={[styles.statusDot, { backgroundColor: isOpen ? colors.secondary : colors.error }]} />
-                    <Text style={[styles.statusText, { color: colors.secondary }]}>
-                        {isOpen ? 'Open Now - 24/7 Emergency' : 'Closed'}
+                    <View style={[styles.statusDot, { backgroundColor: isOpen ? colors.success : colors.error }]} />
+                    <Text style={[styles.statusText, { color: isOpen ? colors.success : colors.error }]}>
+                        {isOpen ? 'Open Now - 24/7' : 'Closed'}
                     </Text>
                  </View>
-                 <Text style={styles.addressText}>{facility.address}, Zimbabwe</Text>
+                 <Text style={styles.addressText}>{facility.address}, Harare</Text>
               </View>
               <View style={styles.waitSection}>
                  <Text style={styles.waitLabel}>WAIT TIME</Text>
-                 <Text style={styles.waitValue}>~{facility.wait_time || 15}</Text>
+                 <Text style={styles.waitValue}>{facility.wait_time || 15}</Text>
                  <Text style={styles.waitUnit}>mins</Text>
               </View>
            </View>
@@ -119,7 +117,7 @@ export default function FacilityDetailScreen() {
             </TouchableOpacity>
 
             <TouchableOpacity style={styles.actionButton}>
-                <MaterialIcons name="share" size={24} color={colors.onSurfaceVariant} />
+                <MaterialIcons name="share" size={24} color={colors.secondary} />
                 <Text style={styles.actionButtonText}>Share</Text>
             </TouchableOpacity>
         </View>
@@ -127,16 +125,16 @@ export default function FacilityDetailScreen() {
         {/* Services Grid */}
         <View style={styles.section}>
             <View style={styles.sectionHeader}>
-                <MaterialIcons name="medical-services" size={24} color={colors.tertiary} />
-                <Text style={styles.sectionTitle}>Services</Text>
+                <MaterialIcons name="medical-services" size={24} color={colors.secondary} />
+                <Text style={styles.sectionTitle}>Available Services</Text>
             </View>
             <View style={styles.servicesGrid}>
-                {['ER', 'ICU', 'X-Ray', 'Lab'].map((service) => (
+                {['ER', 'ICU', 'X-Ray', 'Laboratory', 'Pharmacy', 'Surgery'].map((service) => (
                     <View key={service} style={styles.serviceItem}>
                         <MaterialIcons
-                            name={service === 'ER' ? 'emergency' : service === 'ICU' ? 'airline-seat-flat' : service === 'X-Ray' ? 'grid-on' : 'biotech'}
-                            size={20}
-                            color={colors.secondary}
+                            name="check-circle"
+                            size={16}
+                            color={colors.success}
                         />
                         <Text style={styles.serviceText}>{service}</Text>
                     </View>
@@ -152,36 +150,22 @@ export default function FacilityDetailScreen() {
             </View>
             <View style={styles.hoursList}>
                 <View style={styles.hoursRow}>
-                    <Text style={[styles.hoursDay, { color: colors.primary }]}>Monday - Sunday</Text>
+                    <Text style={[styles.hoursDay, { color: colors.primary }]}>Emergency Room</Text>
                     <Text style={styles.hoursValue}>24 Hours</Text>
                 </View>
                 <View style={styles.separator} />
                 <View style={styles.hoursRow}>
-                    <Text style={styles.hoursDay}>Outpatient Clinic</Text>
-                    <Text style={styles.hoursValue}>08:00 - 17:00</Text>
+                    <Text style={styles.hoursDay}>General Clinic</Text>
+                    <Text style={styles.hoursValue}>08:00 - 18:00</Text>
                 </View>
                 <View style={styles.hoursRow}>
                     <Text style={styles.hoursDay}>Pharmacy</Text>
                     <Text style={styles.hoursValue}>07:00 - 22:00</Text>
                 </View>
-                <View style={styles.hoursRow}>
-                    <Text style={styles.hoursDay}>Visiting Hours</Text>
-                    <Text style={styles.hoursValue}>13:00 - 14:00</Text>
-                </View>
             </View>
         </View>
 
-        {/* Map Preview */}
-        <View style={styles.mapPreview}>
-            <View style={styles.mapPlaceholder}>
-                 <MaterialIcons name="map" size={48} color={colors.outlineVariant} />
-            </View>
-            <View style={styles.trafficBadge}>
-                <Text style={styles.trafficText}>LIVE TRAFFIC DATA</Text>
-            </View>
-        </View>
-
-        <View style={{ height: 40 }} />
+        <View style={{ height: 60 }} />
       </ScrollView>
     </View>
   );
@@ -192,6 +176,16 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: colors.background,
   },
+  heroBackground: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    height: 300,
+    backgroundColor: colors.darkHeader,
+    borderBottomLeftRadius: 40,
+    borderBottomRightRadius: 40,
+  },
   center: {
       flex: 1,
       justifyContent: 'center',
@@ -199,7 +193,7 @@ const styles = StyleSheet.create({
   },
   header: {
     height: 60,
-    backgroundColor: colors.darkHeader,
+    backgroundColor: 'transparent',
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
@@ -207,37 +201,28 @@ const styles = StyleSheet.create({
   },
   headerTitle: {
     fontFamily: 'Montserrat_700Bold',
-    fontSize: 18,
-    color: colors.white,
+    fontSize: 14,
+    letterSpacing: 2,
+    color: 'rgba(255,255,255,0.6)',
   },
   avatarContainer: {
     width: 36,
     height: 36,
     borderRadius: 18,
-    borderWidth: 1.5,
-    borderColor: colors.primary,
+    backgroundColor: colors.white,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: colors.white,
   },
   content: {
       flex: 1,
   },
   hero: {
-      height: 300,
-      backgroundColor: colors.surfaceDim,
-      position: 'relative',
-  },
-  heroImage: {
-      width: '100%',
-      height: '100%',
-      opacity: 0.6,
+      height: 200,
+      paddingHorizontal: 20,
+      justifyContent: 'center',
   },
   heroOverlay: {
-      ...StyleSheet.absoluteFillObject,
-      padding: 20,
-      justifyContent: 'flex-end',
-      backgroundColor: 'rgba(0,0,0,0.3)',
+      paddingVertical: 10,
   },
   traumaBadge: {
       flexDirection: 'row',
@@ -252,7 +237,7 @@ const styles = StyleSheet.create({
   },
   traumaBadgeText: {
       color: colors.white,
-      fontSize: 12,
+      fontSize: 10,
       fontWeight: '800',
   },
   heroTitle: {
@@ -260,26 +245,33 @@ const styles = StyleSheet.create({
       fontWeight: '900',
       color: colors.white,
       lineHeight: 36,
-      marginBottom: 8,
   },
-  heroZimPulse: {
-      fontSize: 48,
-      fontWeight: '900',
-      color: 'rgba(255, 255, 255, 0.2)',
-      marginTop: -20,
+  heroSubTitle: {
+      fontSize: 16,
+      color: 'rgba(255,255,255,0.7)',
+      marginTop: 4,
   },
-  heroTagline: {
-      fontSize: 12,
-      fontWeight: '700',
-      color: colors.white,
-      letterSpacing: 2,
+  brandBadge: {
+    marginTop: 15,
+    borderWidth: 1,
+    borderColor: colors.tertiary,
+    alignSelf: 'flex-start',
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 4,
+  },
+  brandTagline: {
+      fontSize: 10,
+      fontWeight: '800',
+      color: colors.tertiary,
+      letterSpacing: 1,
   },
   infoCard: {
       backgroundColor: colors.white,
-      margin: 16,
-      marginTop: -30,
-      borderRadius: 16,
-      padding: 20,
+      margin: 20,
+      marginTop: 10,
+      borderRadius: 20,
+      padding: 24,
       ...shadows.cardElevated,
   },
   infoRow: {
@@ -306,7 +298,8 @@ const styles = StyleSheet.create({
   },
   addressText: {
       fontSize: 14,
-      color: colors.greyInactive,
+      color: colors.textSecondary,
+      marginTop: 4,
   },
   waitSection: {
       alignItems: 'flex-end',
@@ -314,48 +307,46 @@ const styles = StyleSheet.create({
   waitLabel: {
       fontSize: 10,
       fontWeight: '700',
-      color: colors.greyInactive,
+      color: colors.textTertiary,
   },
   waitValue: {
-      fontSize: 32,
+      fontSize: 36,
       fontWeight: '900',
       color: colors.primary,
-      lineHeight: 36,
+      lineHeight: 40,
   },
   waitUnit: {
-      fontSize: 18,
-      fontWeight: '900',
+      fontSize: 16,
+      fontWeight: '800',
       color: colors.primary,
       marginTop: -5,
   },
   actionRow: {
       flexDirection: 'row',
-      paddingHorizontal: 16,
+      paddingHorizontal: 20,
       gap: 12,
-      marginBottom: 24,
+      marginBottom: 32,
   },
   actionButton: {
       flex: 1,
-      backgroundColor: colors.surfaceContainerLow,
-      padding: 12,
-      borderRadius: 12,
+      backgroundColor: colors.white,
+      padding: 16,
+      borderRadius: 16,
       alignItems: 'center',
-      gap: 4,
-      borderWidth: 1,
-      borderColor: colors.outlineVariant,
+      gap: 6,
+      ...shadows.card,
   },
   navigateButton: {
-      backgroundColor: colors.secondaryContainer,
-      borderColor: colors.secondary,
+      backgroundColor: colors.primary,
   },
   actionButtonText: {
-      fontSize: 14,
+      fontSize: 12,
       fontWeight: '700',
-      color: colors.onSurface,
+      color: colors.textPrimary,
   },
   section: {
-      paddingHorizontal: 16,
-      marginBottom: 24,
+      paddingHorizontal: 20,
+      marginBottom: 32,
   },
   sectionHeader: {
       flexDirection: 'row',
@@ -365,34 +356,33 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
       fontSize: 20,
-      fontWeight: '700',
-      color: colors.onSurface,
+      fontWeight: '800',
+      color: colors.textPrimary,
   },
   servicesGrid: {
       flexDirection: 'row',
       flexWrap: 'wrap',
-      gap: 12,
+      gap: 10,
   },
   serviceItem: {
-      width: '48%',
+      width: '31%',
       flexDirection: 'row',
       alignItems: 'center',
-      backgroundColor: colors.surfaceContainerLow,
-      padding: 12,
-      borderRadius: 8,
-      gap: 12,
+      backgroundColor: 'rgba(0, 95, 175, 0.05)',
+      padding: 10,
+      borderRadius: 10,
+      gap: 6,
   },
   serviceText: {
-      fontSize: 14,
-      fontWeight: '600',
-      color: colors.onSurface,
+      fontSize: 11,
+      fontWeight: '700',
+      color: colors.secondary,
   },
   hoursList: {
       backgroundColor: colors.white,
-      padding: 16,
-      borderRadius: 12,
-      borderWidth: 1,
-      borderColor: colors.outlineVariant,
+      padding: 20,
+      borderRadius: 16,
+      ...shadows.card,
       gap: 12,
   },
   hoursRow: {
@@ -402,42 +392,15 @@ const styles = StyleSheet.create({
   hoursDay: {
       fontSize: 14,
       fontWeight: '700',
-      color: colors.onSurface,
+      color: colors.textPrimary,
   },
   hoursValue: {
       fontSize: 14,
-      color: colors.onSurfaceVariant,
+      color: colors.textSecondary,
+      fontWeight: '600',
   },
   separator: {
       height: 1,
-      backgroundColor: colors.outlineVariant,
+      backgroundColor: colors.background,
   },
-  mapPreview: {
-      marginHorizontal: 16,
-      height: 180,
-      borderRadius: 16,
-      overflow: 'hidden',
-      backgroundColor: colors.surfaceDim,
-      position: 'relative',
-  },
-  mapPlaceholder: {
-      flex: 1,
-      justifyContent: 'center',
-      alignItems: 'center',
-  },
-  trafficBadge: {
-      position: 'absolute',
-      bottom: 12,
-      right: 12,
-      backgroundColor: colors.white,
-      paddingHorizontal: 12,
-      paddingVertical: 4,
-      borderRadius: 20,
-      ...shadows.card,
-  },
-  trafficText: {
-      fontSize: 10,
-      fontWeight: '800',
-      color: colors.onSurface,
-  }
 });
