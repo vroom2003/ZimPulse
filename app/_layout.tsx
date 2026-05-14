@@ -34,26 +34,25 @@ export default function RootLayout() {
   }, [error]);
 
   useEffect(() => {
-    async function checkOnboarding() {
-        try {
-            const hasOnboarded = await AsyncStorage.getItem('hasOnboarded');
-            if (!hasOnboarded) {
-                router.replace('/onboarding');
-            }
-        } catch (e) {
-            console.error(e);
-        } finally {
-            setIsReady(true);
-        }
-    }
-
     if (loaded) {
       SplashScreen.hideAsync();
+
+      const checkOnboarding = async () => {
+          try {
+              const hasOnboarded = await AsyncStorage.getItem('hasOnboarded');
+              if (!hasOnboarded) {
+                  router.replace('/onboarding');
+              }
+          } catch (e) {
+              console.error(e);
+          }
+      };
+
       checkOnboarding();
     }
   }, [loaded]);
 
-  if (!loaded || !isReady) {
+  if (!loaded) {
     return null;
   }
 

@@ -18,6 +18,7 @@ import { colors } from '@/src/theme/colors';
 import { shadows } from '@/src/theme/shadows';
 import { spacing } from '@/src/theme/spacing';
 import { typography } from '@/src/theme/typography';
+import ECGAnimation from '@/components/ECGAnimation';
 
 export default function HomeScreen() {
   const router = useRouter();
@@ -70,6 +71,7 @@ export default function HomeScreen() {
         <View style={styles.heroSection}>
           <Text style={styles.heroGreeting}>Hello, ZimPulse User</Text>
           <Text style={styles.heroSubtext}>Emergency services are on standby in Harare</Text>
+          <ECGAnimation />
         </View>
 
         {/* ========== SOS SECTION ========== */}
