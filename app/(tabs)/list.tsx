@@ -78,12 +78,15 @@ const FALLBACK_FACILITIES: Facility[] = [
   }
 ];
 
+import { RefreshControl } from 'react-native';
+
 export default function ListScreen() {
   const router = useRouter();
   const [facilities, setFacilities] = useState<Facility[]>([]);
   const [search, setSearch] = useState('');
   const [selectedFilter, setSelectedFilter] = useState('All Facilities');
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const [userLocation, setUserLocation] = useState<Location.LocationObject | null>(null);
 
   useEffect(() => {
@@ -101,6 +104,12 @@ export default function ListScreen() {
       }
     })();
   }, []);
+
+  const onRefresh = async () => {
+    setRefreshing(true);
+    await fetchFacilities();
+    setRefreshing(false);
+  };
 
   async function fetchFacilities() {
     try {
@@ -160,6 +169,22 @@ export default function ListScreen() {
 
     return true;
   });
+
+  const renderSkeleton = () => (
+    <View style={[styles.card, { opacity: 0.5 }]}>
+      <View style={styles.cardHeader}>
+        <View style={[styles.typeBadge, { backgroundColor: '#E0E0E0', width: 80, height: 20 }]} />
+        <View style={{ width: 40, height: 12, backgroundColor: '#E0E0E0' }} />
+      </View>
+      <View style={{ width: '70%', height: 24, backgroundColor: '#E0E0E0', marginVertical: 8 }} />
+      <View style={{ width: '100%', height: 16, backgroundColor: '#E0E0E0', marginBottom: 4 }} />
+      <View style={{ width: '90%', height: 16, backgroundColor: '#E0E0E0', marginBottom: 12 }} />
+      <View style={styles.buttonRow}>
+        <View style={[styles.callButton, { backgroundColor: '#E0E0E0', borderColor: 'transparent' }]} />
+        <View style={[styles.navigateButton, { backgroundColor: '#E0E0E0' }]} />
+      </View>
+    </View>
+  );
 
   const renderFilterItem = (filter: string) => (
     <TouchableOpacity
@@ -240,19 +265,21 @@ export default function ListScreen() {
 
   return (
     <View style={styles.container}>
-      <SafeAreaView edges={['top']} style={{ backgroundColor: colors.darkHeader }}>
+      <View style={styles.topHeader} />
+      <SafeAreaView edges={['top']} style={{ backgroundColor: 'transparent' }}>
         <View style={styles.header}>
           <View style={styles.headerLeft}>
             <MaterialIcons name="location-on" size={20} color={colors.sosRed} />
-            <Text style={styles.headerTitle}>HARARE CENTRAL</Text>
+            <Text style={styles.headerTitle}>ZIMPULSE DIRECTORY</Text>
           </View>
           <View style={styles.avatarContainer}>
-             <Image
-                source={require('@/assets/images/logo.png')}
-                style={styles.headerLogo}
-                resizeMode="contain"
-             />
+             <MaterialIcons name="person" size={24} color={colors.greyInactive} />
           </View>
+        </View>
+
+        <View style={styles.listHeader}>
+          <Text style={styles.listSub}>{filteredFacilities.length} Results found</Text>
+          <Text style={styles.locationTitle}>HARARE CENTRAL</Text>
         </View>
       </SafeAreaView>
 
@@ -278,10 +305,13 @@ export default function ListScreen() {
       </View>
 
       <FlatList
-        data={filteredFacilities}
-        keyExtractor={(item) => item.id.toString()}
-        renderItem={renderItem}
+        data={loading ? [1, 2, 3] as any : filteredFacilities}
+        keyExtractor={(item, index) => loading ? `skeleton-${index}` : item.id.toString()}
+        renderItem={loading ? renderSkeleton : renderItem}
         contentContainerStyle={styles.listContent}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.white} />
+        }
         ListFooterComponent={
           <View style={styles.emergencyBanner}>
             <View style={styles.emergencyIconContainer}>
@@ -314,9 +344,19 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: colors.background,
   },
+  topHeader: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    height: 200,
+    backgroundColor: colors.darkHeader,
+    borderBottomLeftRadius: 30,
+    borderBottomRightRadius: 30,
+  },
   header: {
     height: 60,
-    backgroundColor: colors.darkHeader,
+    backgroundColor: 'transparent',
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
@@ -329,8 +369,9 @@ const styles = StyleSheet.create({
   },
   headerTitle: {
     fontFamily: 'Montserrat_700Bold',
-    fontSize: 18,
-    color: colors.white,
+    fontSize: 14,
+    letterSpacing: 2,
+    color: 'rgba(255,255,255,0.6)',
   },
   avatarContainer: {
     width: 40,
@@ -341,9 +382,19 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     overflow: 'hidden',
   },
-  headerLogo: {
-    width: 32,
-    height: 32,
+  listHeader: {
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+  },
+  listSub: {
+    fontSize: 12,
+    color: 'rgba(255,255,255,0.5)',
+    fontWeight: '700',
+  },
+  locationTitle: {
+    fontSize: 28,
+    fontWeight: '900',
+    color: colors.white,
   },
   searchContainer: {
     flexDirection: 'row',

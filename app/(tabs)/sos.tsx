@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { StyleSheet, Text, TouchableOpacity, View, Alert, ActivityIndicator, ScrollView, Animated } from 'react-native';
+import { StyleSheet, Text, TouchableOpacity, View, Alert, ActivityIndicator, ScrollView, Animated, Linking } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialIcons, FontAwesome5 } from '@expo/vector-icons';
 import * as SMS from 'expo-sms';
 import * as Location from 'expo-location';
+import * as Haptics from 'expo-haptics';
 import { useRouter } from 'expo-router';
 import { supabase } from '@/src/services/supabaseClient';
 import { colors } from '@/src/theme/colors';
@@ -59,6 +60,8 @@ export default function SOSScreen() {
 
   const sendSOS = async () => {
     setSending(true);
+    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
+
     try {
       const { status } = await Location.requestForegroundPermissionsAsync();
       let locationMsg = 'Location not available';
@@ -70,27 +73,36 @@ export default function SOSScreen() {
           latitude: location.coords.latitude,
           longitude: location.coords.longitude
         };
-        locationMsg = `https://www.google.com/maps/search/?api=1&query=${coords.latitude},${coords.longitude}`;
+        locationMsg = `https://maps.google.com/?q=${coords.latitude},${coords.longitude}`;
       }
 
-      // Log to Supabase
+      // 1. Log to Supabase
       try {
-        await (supabase as any).from('sos_logs').insert([
+        await supabase.from('sos_logs').insert([
           { user_latitude: coords.latitude, user_longitude: coords.longitude }
         ]);
       } catch (e) {
-          console.error(e);
+          console.error('Logging error:', e);
       }
 
-      const isAvailable = await SMS.isAvailableAsync();
-      if (isAvailable) {
-        await SMS.sendSMSAsync(
-          ['999', '994'],
-          `EMERGENCY SOS from ZimPulse! I need immediate assistance. My location: ${locationMsg}`
-        );
-        Alert.alert('Success', 'SOS alert sent to emergency services and guardians.');
+      // 2. Fetch Guardians
+      const { data: guardians } = await supabase.from('guardians').select('phone, name');
+      const guardianNumbers = guardians?.map(g => g.phone) || [];
+
+      if (guardianNumbers.length > 0) {
+        const isAvailable = await SMS.isAvailableAsync();
+        if (isAvailable) {
+          await SMS.sendSMSAsync(
+            guardianNumbers,
+            `🚨 EMERGENCY: I need help. My live location: ${locationMsg}\nSent via ZimPulse.`
+          );
+          Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+          Alert.alert('Success', `SOS alert sent to: ${guardians?.map(g => g.name).join(', ')}`);
+        } else {
+          Alert.alert('Emergency', 'SMS services unavailable. Please call emergency services directly.');
+        }
       } else {
-        Alert.alert('Emergency', 'SMS services unavailable. Please call 999 directly.');
+        Alert.alert('No Guardians', 'You have no guardians registered. Please add emergency contacts.');
       }
     } catch (error) {
       Alert.alert('Error', 'Failed to send SOS alert.');
@@ -140,29 +152,38 @@ export default function SOSScreen() {
         )}
 
         <View style={styles.dashboardGrid}>
-            <View style={styles.gridItem}>
+            <TouchableOpacity
+                style={styles.gridItem}
+                onPress={() => Linking.openURL('tel:994')}
+            >
                 <View style={[styles.iconBox, { backgroundColor: '#FFEBEE' }]}>
                     <FontAwesome5 name="ambulance" size={24} color={colors.primary} />
                 </View>
-                <Text style={styles.gridLabel}>Ambulance</Text>
-                <Text style={styles.gridValue}>999</Text>
-            </View>
+                <Text style={styles.gridLabel}>Call Ambulance</Text>
+                <Text style={styles.gridValue}>994</Text>
+            </TouchableOpacity>
 
-            <View style={styles.gridItem}>
+            <TouchableOpacity
+                style={styles.gridItem}
+                onPress={() => Linking.openURL('tel:995')}
+            >
                 <View style={[styles.iconBox, { backgroundColor: '#E3F2FD' }]}>
                     <MaterialIcons name="local-police" size={24} color={colors.secondary} />
                 </View>
                 <Text style={styles.gridLabel}>Police</Text>
                 <Text style={styles.gridValue}>995</Text>
-            </View>
+            </TouchableOpacity>
 
-            <View style={styles.gridItem}>
+            <TouchableOpacity
+                style={styles.gridItem}
+                onPress={() => Linking.openURL('tel:993')}
+            >
                 <View style={[styles.iconBox, { backgroundColor: '#FFF3E0' }]}>
                     <MaterialIcons name="fire-truck" size={24} color={colors.tertiary} />
                 </View>
                 <Text style={styles.gridLabel}>Fire Brigade</Text>
                 <Text style={styles.gridValue}>993</Text>
-            </View>
+            </TouchableOpacity>
 
             <View style={styles.gridItem}>
                 <View style={[styles.iconBox, { backgroundColor: '#E8F5E9' }]}>

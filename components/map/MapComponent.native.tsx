@@ -1,8 +1,8 @@
-import React, { useEffect, useState } from 'react';
-import { StyleSheet, Text, View, ActivityIndicator, TouchableOpacity, Platform } from 'react-native';
+import React, { useEffect, useState, useRef } from 'react';
+import { StyleSheet, Text, View, ActivityIndicator, TouchableOpacity, Platform, Linking } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import * as Location from 'expo-location';
-import MapView, { Marker } from 'react-native-maps';
+import MapView, { Marker, PROVIDER_GOOGLE } from 'react-native-maps';
 import { colors } from '@/src/theme/colors';
 import { typography } from '@/src/theme/typography';
 import { shadows } from '@/src/theme/shadows';
@@ -16,28 +16,37 @@ export default function MapScreen() {
   const [facilities, setFacilities] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedFacility, setSelectedFacility] = useState<any>(null);
+  const mapRef = useRef<MapView>(null);
   const router = useRouter();
 
   useEffect(() => {
-    (async () => {
-      let { status } = await Location.requestForegroundPermissionsAsync();
-      if (status !== 'granted') {
-        setErrorMsg('Permission to access location was denied');
-        setLoading(false);
-        return;
-      }
-
+    const initMap = async () => {
       try {
-        let location = await Location.getCurrentPositionAsync({});
-        setLocation(location);
-      } catch (e) {
-        setErrorMsg('Could not fetch location');
-      }
+        let { status } = await Location.requestForegroundPermissionsAsync();
+        if (status !== 'granted') {
+          setErrorMsg('Permission to access location was denied');
+        } else {
+            const loc = await Location.getCurrentPositionAsync({});
+            setLocation(loc);
 
-      const { data, error } = await supabase.from('facilities').select('*');
-      if (data) setFacilities(data);
-      setLoading(false);
-    })();
+            // Center map on user
+            mapRef.current?.animateToRegion({
+                latitude: loc.coords.latitude,
+                longitude: loc.coords.longitude,
+                latitudeDelta: 0.05,
+                longitudeDelta: 0.05,
+            });
+        }
+      } catch (e) {
+        console.error('Location error:', e);
+      } finally {
+        const { data } = await supabase.from('facilities').select('*');
+        if (data) setFacilities(data);
+        setLoading(false);
+      }
+    };
+
+    initMap();
   }, []);
 
   return (
@@ -58,14 +67,18 @@ export default function MapScreen() {
       ) : (
         <View style={{ flex: 1 }}>
           <MapView
+            ref={mapRef}
             style={styles.map}
+            provider={PROVIDER_GOOGLE}
+            customMapStyle={darkMapStyle}
             initialRegion={{
-              latitude: location?.coords.latitude || -17.8252,
-              longitude: location?.coords.longitude || 31.0335,
-              latitudeDelta: 0.05,
-              longitudeDelta: 0.05,
+              latitude: -17.8252,
+              longitude: 31.0335,
+              latitudeDelta: 0.1,
+              longitudeDelta: 0.1,
             }}
             showsUserLocation={true}
+            showsMyLocationButton={true}
             onPress={() => setSelectedFacility(null)}
           >
             {facilities.map((f: any) => (
@@ -107,11 +120,17 @@ export default function MapScreen() {
                   <Text style={styles.selectedAddress}>{selectedFacility.address}</Text>
 
                   <View style={styles.cardButtons}>
-                    <TouchableOpacity style={styles.miniButton}>
+                    <TouchableOpacity
+                        style={styles.miniButton}
+                        onPress={() => selectedFacility.phone && Linking.openURL(`tel:${selectedFacility.phone}`)}
+                    >
                         <MaterialIcons name="call" size={18} color={colors.secondary} />
                         <Text style={styles.miniButtonText}>Call</Text>
                     </TouchableOpacity>
-                    <TouchableOpacity style={[styles.miniButton, { backgroundColor: colors.primary }]}>
+                    <TouchableOpacity
+                        style={[styles.miniButton, { backgroundColor: colors.primary }]}
+                        onPress={() => Linking.openURL(`https://www.google.com/maps/dir/?api=1&destination=${selectedFacility.latitude},${selectedFacility.longitude}`)}
+                    >
                         <MaterialIcons name="near-me" size={18} color={colors.white} />
                         <Text style={[styles.miniButtonText, { color: colors.white }]}>Navigate</Text>
                     </TouchableOpacity>
@@ -136,6 +155,45 @@ export default function MapScreen() {
     </View>
   );
 }
+
+const darkMapStyle = [
+  {
+    "elementType": "geometry",
+    "stylers": [{ "color": "#212121" }]
+  },
+  {
+    "elementType": "labels.icon",
+    "stylers": [{ "visibility": "off" }]
+  },
+  {
+    "elementType": "labels.text.fill",
+    "stylers": [{ "color": "#757575" }]
+  },
+  {
+    "elementType": "labels.text.stroke",
+    "stylers": [{ "color": "#212121" }]
+  },
+  {
+    "featureType": "administrative",
+    "elementType": "geometry",
+    "stylers": [{ "color": "#757575" }]
+  },
+  {
+    "featureType": "poi",
+    "elementType": "geometry",
+    "stylers": [{ "color": "#181818" }]
+  },
+  {
+    "featureType": "road",
+    "elementType": "geometry.fill",
+    "stylers": [{ "color": "#2c2c2c" }]
+  },
+  {
+    "featureType": "water",
+    "elementType": "geometry",
+    "stylers": [{ "color": "#000000" }]
+  }
+];
 
 const styles = StyleSheet.create({
   container: {

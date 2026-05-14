@@ -9,6 +9,7 @@ import {
     TouchableOpacity,
     View,
     Alert,
+    Linking,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
@@ -41,7 +42,8 @@ export default function HomeScreen() {
 
   return (
     <View style={styles.container}>
-      <SafeAreaView edges={['top']} style={{ backgroundColor: colors.darkHeader }}>
+      <View style={styles.topGradient} />
+      <SafeAreaView edges={['top']} style={{ backgroundColor: 'transparent' }}>
         <View style={styles.header}>
           <Image
             source={require('@/assets/images/logo.png')}
@@ -66,26 +68,28 @@ export default function HomeScreen() {
         showsVerticalScrollIndicator={false}
       >
         <View style={styles.heroSection}>
-          <Text style={styles.heroGreeting}>Hello, User</Text>
-          <Text style={styles.heroSubtext}>Emergency services are on standby</Text>
+          <Text style={styles.heroGreeting}>Hello, ZimPulse User</Text>
+          <Text style={styles.heroSubtext}>Emergency services are on standby in Harare</Text>
         </View>
 
         {/* ========== SOS SECTION ========== */}
-        <View style={styles.sosSection}>
-             <TouchableOpacity
+        <View style={styles.sosContainer}>
+            <View style={styles.sosRingOuter} />
+            <View style={styles.sosRingInner} />
+            <TouchableOpacity
               style={styles.sosButton}
-              activeOpacity={0.8}
+              activeOpacity={0.9}
               onPress={() => router.push('/sos')}
             >
               <MaterialIcons
                 name="emergency"
-                size={80}
+                size={70}
                 color={colors.white}
               />
               <Text style={styles.sosButtonText}>SOS</Text>
             </TouchableOpacity>
 
-            <View style={styles.tagLineContainer}>
+            <View style={styles.brandContainer}>
                 <Text style={styles.brandTitle}>ZimPulse</Text>
                 <Text style={styles.brandTagline}>EVERY HEARTBEAT COUNTS.</Text>
             </View>
@@ -212,14 +216,23 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: colors.background,
   },
-  header: {
+  topGradient: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    height: 300,
     backgroundColor: colors.darkHeader,
+    borderBottomLeftRadius: 40,
+    borderBottomRightRadius: 40,
+  },
+  header: {
+    backgroundColor: 'transparent',
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     paddingHorizontal: spacing.marginMobile,
     height: 70,
-    ...shadows.header,
   },
   logo: {
     height: 40,
@@ -264,55 +277,71 @@ const styles = StyleSheet.create({
   },
   heroSection: {
     marginBottom: spacing.lg,
+    paddingTop: 10,
   },
   heroGreeting: {
     ...typography.h1,
-    color: colors.onSurface,
-    fontSize: 32,
+    color: colors.white,
+    fontSize: 28,
     fontWeight: '800',
   },
   heroSubtext: {
     ...typography.bodyMd,
-    color: colors.greyInactive,
+    color: 'rgba(255,255,255,0.7)',
     marginTop: 4,
   },
-  sosSection: {
+  sosContainer: {
     alignItems: 'center',
-    paddingVertical: 20,
-    position: 'relative',
+    justifyContent: 'center',
+    paddingVertical: 30,
     marginBottom: 40,
+  },
+  sosRingOuter: {
+    position: 'absolute',
+    width: 240,
+    height: 240,
+    borderRadius: 120,
+    backgroundColor: 'rgba(175, 16, 26, 0.05)',
+  },
+  sosRingInner: {
+    position: 'absolute',
+    width: 200,
+    height: 200,
+    borderRadius: 100,
+    backgroundColor: 'rgba(175, 16, 26, 0.1)',
   },
   sosButton: {
     backgroundColor: colors.primary,
-    width: 180,
-    height: 180,
-    borderRadius: 90,
+    width: 160,
+    height: 160,
+    borderRadius: 80,
     justifyContent: 'center',
     alignItems: 'center',
     ...shadows.sosGlow,
-    zIndex: 2,
+    borderWidth: 8,
+    borderColor: 'rgba(255,255,255,0.2)',
   },
   sosButtonText: {
     color: colors.white,
     fontFamily: 'Montserrat_700Bold',
-    fontSize: 32,
+    fontSize: 28,
     fontWeight: '900',
+    marginTop: 4,
   },
-  tagLineContainer: {
-      marginTop: -40,
-      paddingTop: 50,
+  brandContainer: {
       alignItems: 'center',
-      width: '100%',
+      marginTop: 20,
   },
   brandTitle: {
-      fontSize: 48,
+      fontSize: 42,
       fontWeight: '900',
-      color: 'rgba(175, 16, 26, 0.1)',
+      color: 'rgba(175, 16, 26, 0.08)',
+      textTransform: 'uppercase',
       position: 'absolute',
-      top: 10,
+      top: -15,
   },
   brandTagline: {
-      fontSize: 12,
+      fontSize: 13,
       fontWeight: '800',
       color: colors.primary,
       letterSpacing: 2,
